@@ -12,10 +12,13 @@ export default function SignInViewPage() {
     <div className='relative h-screen flex-col items-center justify-center bg-gradient-to-br from-purple-200 via-pink-100 to-pink-200 md:grid lg:max-w-none lg:grid-cols-2 lg:px-0'>
       <div className='relative hidden h-full flex-col p-10 text-white lg:flex'>
         <div className='absolute inset-0' />
-        <div className='relative z-20 flex items-center text-lg font-medium'>
-          <div className='mr-3 h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600'></div>
+        <Link
+          href='/'
+          className='relative z-20 flex items-center text-lg font-medium'
+        >
+          <div className='mr-3 h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600' />
           <span className='text-2xl font-bold text-gray-900'>SehatYarr</span>
-        </div>
+        </Link>
         <div className='relative z-20 mx-auto flex h-full max-w-md items-center justify-center text-center'>
           <blockquote className='space-y-2'>
             <p className='text-lg text-gray-900'>

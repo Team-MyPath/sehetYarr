@@ -15,14 +15,14 @@ export default async function Page() {
 
   // If the user is authenticated, go to dashboard.
   if (userId) {
-    redirect('/dashboard/overview');
+    redirect('/dashboard/healthstake');
   }
 
   // Not authenticated: render the landing page (server component)
   return (
-    <main className="w-full bg-white">
+    <main className='w-full bg-white'>
       <Header />
-      <div className="pt-16">
+      <div className='pt-14 sm:pt-16'>
         <Hero />
         <CTA />
         <Services />
