@@ -55,8 +55,9 @@ import {
 import type { ToolUIPart } from 'ai';
 import { GlobeIcon, MicIcon } from 'lucide-react';
 import { nanoid } from 'nanoid';
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
+import { llmChatService } from '@/services/llmChat';
 
 type MessageType = {
   key: string;
@@ -80,200 +81,10 @@ type MessageType = {
   }[];
   avatar: string;
   name: string;
+  type?: 'thinking' | 'quiz_artifact' | 'video_artifact';
 };
 
-const initialMessages: MessageType[] = [
-  {
-    key: nanoid(),
-    from: 'user',
-    versions: [
-      {
-        id: nanoid(),
-        content: 'Can you explain how to use React hooks effectively?'
-      }
-    ],
-    avatar: 'https://github.com/haydenbleasel.png',
-    name: 'Hayden Bleasel'
-  },
-  {
-    key: nanoid(),
-    from: 'assistant',
-    sources: [
-      {
-        href: 'https://react.dev/reference/react',
-        title: 'React Documentation'
-      },
-      {
-        href: 'https://react.dev/reference/react-dom',
-        title: 'React DOM Documentation'
-      }
-    ],
-    tools: [
-      {
-        name: 'mcp',
-        description: 'Searching React documentation',
-        status: 'input-available',
-        parameters: {
-          query: 'React hooks best practices',
-          source: 'react.dev'
-        },
-        result: `{
-  "query": "React hooks best practices",
-  "results": [
-    {
-      "title": "Rules of Hooks",
-      "url": "https://react.dev/warnings/invalid-hook-call-warning",
-      "snippet": "Hooks must be called at the top level of your React function components or custom hooks. Don't call hooks inside loops, conditions, or nested functions."
-    },
-    {
-      "title": "useState Hook",
-      "url": "https://react.dev/reference/react/useState",
-      "snippet": "useState is a React Hook that lets you add state to your function components. It returns an array with two values: the current state and a function to update it."
-    },
-    {
-      "title": "useEffect Hook",
-      "url": "https://react.dev/reference/react/useEffect",
-      "snippet": "useEffect lets you synchronize a component with external systems. It runs after render and can be used to perform side effects like data fetching."
-    }
-  ]
-}`,
-        error: undefined
-      }
-    ],
-    versions: [
-      {
-        id: nanoid(),
-        content: `# React Hooks Best Practices
-
-React hooks are a powerful feature that let you use state and other React features without writing classes. Here are some tips for using them effectively:
-
-## Rules of Hooks
-
-1. **Only call hooks at the top level** of your component or custom hooks
-2. **Don't call hooks inside loops, conditions, or nested functions**
-
-## Common Hooks
-
-- **useState**: For local component state
-- **useEffect**: For side effects like data fetching
-- **useContext**: For consuming context
-- **useReducer**: For complex state logic
-- **useCallback**: For memoizing functions
-- **useMemo**: For memoizing values
-
-## Example of useState and useEffect
-
-\`\`\`jsx
-function ProfilePage({ userId }) {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    // This runs after render and when userId changes
-    fetchUser(userId).then(userData => {
-      setUser(userData);
-    });
-  }, [userId]);
-
-  return user ? <Profile user={user} /> : <Loading />;
-}
-\`\`\`
-
-Would you like me to explain any specific hook in more detail?`
-      }
-    ],
-    avatar: 'https://github.com/openai.png',
-    name: 'OpenAI'
-  },
-  {
-    key: nanoid(),
-    from: 'user',
-    versions: [
-      {
-        id: nanoid(),
-        content:
-          'Yes, could you explain useCallback and useMemo in more detail? When should I use one over the other?'
-      },
-      {
-        id: nanoid(),
-        content:
-          "I'm particularly interested in understanding the performance implications of useCallback and useMemo. Could you break down when each is most appropriate?"
-      },
-      {
-        id: nanoid(),
-        content:
-          'Thanks for the overview! Could you dive deeper into the specific use cases where useCallback and useMemo make the biggest difference in React applications?'
-      }
-    ],
-    avatar: 'https://github.com/haydenbleasel.png',
-    name: 'Hayden Bleasel'
-  },
-  {
-    key: nanoid(),
-    from: 'assistant',
-    reasoning: {
-      content: `The user is asking for a detailed explanation of useCallback and useMemo. I should provide a clear and concise explanation of each hook's purpose and how they differ.
-
-The useCallback hook is used to memoize functions to prevent unnecessary re-renders of child components that receive functions as props.
-
-The useMemo hook is used to memoize values to avoid expensive recalculations on every render.
-
-Both hooks help with performance optimization, but they serve different purposes.`,
-      duration: 10
-    },
-    versions: [
-      {
-        id: nanoid(),
-        content: `## useCallback vs useMemo
-
-Both hooks help with performance optimization, but they serve different purposes:
-
-### useCallback
-
-\`useCallback\` memoizes **functions** to prevent unnecessary re-renders of child components that receive functions as props.
-
-\`\`\`jsx
-// Without useCallback - a new function is created on every render
-const handleClick = () => {
-  console.log(count);
-};
-
-// With useCallback - the function is only recreated when dependencies change
-const handleClick = useCallback(() => {
-  console.log(count);
-}, [count]);
-\`\`\`
-
-### useMemo
-
-\`useMemo\` memoizes **values** to avoid expensive recalculations on every render.
-
-\`\`\`jsx
-// Without useMemo - expensive calculation runs on every render
-const sortedList = expensiveSort(items);
-
-// With useMemo - calculation only runs when items change
-const sortedList = useMemo(() => expensiveSort(items), [items]);
-\`\`\`
-
-### When to use which?
-
-- Use **useCallback** when:
-  - Passing callbacks to optimized child components that rely on reference equality
-  - Working with event handlers that you pass to child components
-
-- Use **useMemo** when:
-  - You have computationally expensive calculations
-  - You want to avoid recreating objects that are used as dependencies for other hooks
-
-### Performance Note
-
-Don't overuse these hooks! They come with their own overhead. Only use them when you have identified a genuine performance issue.`
-      }
-    ],
-    avatar: 'https://github.com/openai.png',
-    name: 'OpenAI'
-  }
-];
+const initialMessages: MessageType[] = [];
 
 const models = [
   { id: 'gpt-4', name: 'GPT-4' },
@@ -307,66 +118,177 @@ const Example = () => {
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(
     null
   );
-  const streamResponse = useCallback(
-    async (messageId: string, content: string) => {
-      setStatus('streaming');
-      setStreamingMessageId(messageId);
-
-      const words = content.split(' ');
-      let currentContent = '';
-
-      for (let i = 0; i < words.length; i++) {
-        currentContent += (i > 0 ? ' ' : '') + words[i];
-
-        setMessages((prev) =>
-          prev.map((msg) => {
-            if (msg.versions.some((v) => v.id === messageId)) {
-              return {
-                ...msg,
-                versions: msg.versions.map((v) =>
-                  v.id === messageId ? { ...v, content: currentContent } : v
-                )
-              };
-            }
-            return msg;
-          })
-        );
-
-        await new Promise((resolve) =>
-          setTimeout(resolve, Math.random() * 100 + 50)
-        );
+  const [chatId, setChatId] = useState<string>('');
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  const streamingContentRef = useRef<string>('');
+  // Initialize chat session on mount
+  useEffect(() => {
+    const initChat = async () => {
+      try {
+        const newChatId = nanoid();
+        setChatId(newChatId);
+        
+        // Initialize the chat with socket connection
+        await llmChatService.initializeChat(newChatId);
+        setIsInitialized(true);
+        
+        toast.success('Chat initialized', {
+          description: 'Connected to chatbot service'
+        });
+      } catch (error) {
+        console.error('Failed to initialize chat:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Could not connect to chatbot service';
+        toast.error('Connection failed', {
+          description: errorMessage,
+          duration: 10000,
+        });
+        setStatus('error');
       }
+    };
 
-      setStatus('ready');
-      setStreamingMessageId(null);
-    },
-    [streamingMessageId]
-  );
+    initChat();
 
-  const addUserMessage = useCallback(
-    (content: string) => {
-      const userMessage: MessageType = {
-        key: `user-${Date.now()}`,
-        from: 'user',
+    // Cleanup on unmount
+    return () => {
+      llmChatService.removeAllListeners();
+      llmChatService.disconnect();
+    };
+  }, []);
+
+  // Setup socket event listeners
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    // Handle incoming chunks from AI
+    const handleChunk = (data: { chunk: string }) => {
+      streamingContentRef.current += data.chunk;
+      
+      setMessages((prev) =>
+        prev.map((msg) => {
+          if (msg.key === streamingMessageId && msg.type !== 'thinking') {
+            return {
+              ...msg,
+              versions: msg.versions.map((v) =>
+                v.id === streamingMessageId
+                  ? { ...v, content: streamingContentRef.current }
+                  : v
+              )
+            };
+          }
+          return msg;
+        })
+      );
+    };
+
+    // Handle thinking start
+    const handleThinkingStart = () => {
+      const thinkingMessageId = `thinking-${Date.now()}`;
+      setStreamingMessageId(thinkingMessageId);
+
+      const thinkingMessage: MessageType = {
+        key: thinkingMessageId,
+        from: 'assistant',
+        type: 'thinking',
         versions: [
           {
-            id: `user-${Date.now()}`,
-            content
+            id: thinkingMessageId,
+            content: 'Thinking...'
           }
         ],
-        avatar: 'https://github.com/haydenbleasel.png',
-        name: 'User'
+        avatar: 'https://github.com/openai.png',
+        name: 'Assistant'
       };
 
-      setMessages((prev) => [...prev, userMessage]);
+      setMessages((prev) => [...prev, thinkingMessage]);
+    };
 
-      setTimeout(() => {
+    // Handle thinking end
+    const handleThinkingEnd = () => {
+      setMessages((prev) => prev.filter((msg) => msg.type !== 'thinking'));
+    };
+
+    // Handle generation complete
+    const handleGenerationComplete = () => {
+      setStatus('ready');
+      setStreamingMessageId(null);
+      streamingContentRef.current = '';
+    };
+
+    // Handle errors
+    const handleError = (error: any) => {
+      console.error('Socket error:', error);
+      toast.error('Chat error', {
+        description: error.message || 'An error occurred'
+      });
+      setStatus('error');
+      setMessages((prev) => prev.filter((msg) => msg.type !== 'thinking'));
+    };
+
+    // Handle reconnection
+    const handleReconnect = async () => {
+      try {
+        await llmChatService.joinRoom({ chat_id: chatId });
+        toast.info('Reconnected', {
+          description: 'Chat session restored'
+        });
+      } catch (error) {
+        console.error('Reconnection failed:', error);
+      }
+    };
+
+    // Register listeners
+    llmChatService.onChunk(handleChunk);
+    llmChatService.onThinkingStart(handleThinkingStart);
+    llmChatService.onThinkingEnd(handleThinkingEnd);
+    llmChatService.onGenerationComplete(handleGenerationComplete);
+    llmChatService.onError(handleError);
+    llmChatService.onReconnect(handleReconnect);
+
+    return () => {
+      llmChatService.removeAllListeners();
+    };
+  }, [isInitialized, chatId, streamingMessageId]);
+
+  const sendMessage = useCallback(
+    async (content: string, attachments?: string[]) => {
+      if (!isInitialized || !chatId) {
+        toast.error('Chat not ready', {
+          description: 'Please wait for chat to initialize'
+        });
+        return;
+      }
+
+      try {
+        // Add user message to UI
+        const userMessage: MessageType = {
+          key: `user-${Date.now()}`,
+          from: 'user',
+          versions: [
+            {
+              id: `user-${Date.now()}`,
+              content
+            }
+          ],
+          avatar: 'https://github.com/haydenbleasel.png',
+          name: 'User'
+        };
+
+        setMessages((prev) => [...prev, userMessage]);
+
+        // Send message via socket
+        await llmChatService.sendMessage({
+          conversation_id: chatId,
+          content,
+          attachments: attachments || []
+        });
+
+        // Prepare for AI response
         const assistantMessageId = `assistant-${Date.now()}`;
-        const randomResponse =
-          mockResponses[Math.floor(Math.random() * mockResponses.length)];
+        setStreamingMessageId(assistantMessageId);
+        streamingContentRef.current = '';
 
         const assistantMessage: MessageType = {
-          key: `assistant-${Date.now()}`,
+          key: assistantMessageId,
           from: 'assistant',
           versions: [
             {
@@ -379,13 +301,19 @@ const Example = () => {
         };
 
         setMessages((prev) => [...prev, assistantMessage]);
-        streamResponse(assistantMessageId, randomResponse);
-      }, 500);
+        setStatus('streaming');
+      } catch (error) {
+        console.error('Failed to send message:', error);
+        toast.error('Send failed', {
+          description: 'Could not send message'
+        });
+        setStatus('error');
+      }
     },
-    [streamResponse]
+    [isInitialized, chatId]
   );
 
-  const handleSubmit = (message: PromptInputMessage) => {
+  const handleSubmit = async (message: PromptInputMessage) => {
     const hasText = Boolean(message.text);
     const hasAttachments = Boolean(message.files?.length);
 
@@ -395,20 +323,20 @@ const Example = () => {
 
     setStatus('submitted');
 
+    // Handle file attachments (placeholder - implement file upload if needed)
+    let attachmentUrls: string[] = [];
     if (message.files?.length) {
-      toast.success('Files attached', {
-        description: `${message.files.length} file(s) attached to message`
+      toast.info('Files attached', {
+        description: `${message.files.length} file(s) will be processed`
       });
+      // TODO: Upload files to storage and get URLs
+      // For now, just use file URLs/names as placeholders
+      attachmentUrls = message.files.map(f => f.url || 'attachment');
     }
 
-    addUserMessage(message.text || 'Sent with attachments');
+    await sendMessage(message.text || 'Sent with attachments', attachmentUrls);
     setText('');
   };
-
-  // const handleSuggestionClick = (suggestion: string) => {
-  //   setStatus('submitted');
-  //   addUserMessage(suggestion);
-  // };
 
   return (
     <div className='relative flex size-full h-[91vh] flex-col divide-y overflow-hidden'>
@@ -518,7 +446,7 @@ const Example = () => {
                 </PromptInputModelSelect>
               </PromptInputTools>
               <PromptInputSubmit
-                disabled={!(text.trim() || status) || status === 'streaming'}
+                disabled={!isInitialized || !(text.trim() || status) || status === 'streaming'}
                 status={status}
               />
             </PromptInputFooter>

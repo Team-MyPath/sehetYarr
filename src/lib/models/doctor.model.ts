@@ -1,29 +1,23 @@
 import { Schema, model, models } from 'mongoose';
 import { DayOfWeek, Gender } from '../enums';
 
-const DoctorContactSchema = new Schema(
+const AppointmentSchema = new Schema(
   {
-    area: String,
-    city: String,
-    state: String,
-    primaryNumber: String,
-    secondaryNumber: String
-  },
-  { _id: false }
-);
-
-const TimeSlotSchema = new Schema(
-  {
-    start: String,
-    end: String
+    appointerName: String,
+    contactNumber: String
   },
   { _id: false }
 );
 
 const AvailabilitySchema = new Schema(
   {
-    days: [{ type: String, enum: Object.values(DayOfWeek) }],
-    timeSlots: [TimeSlotSchema]
+    monday: String,
+    tuesday: String,
+    wednesday: String,
+    thursday: String,
+    friday: String,
+    saturday: String,
+    sunday: String
   },
   { _id: false }
 );
@@ -32,17 +26,15 @@ const DoctorSchema = new Schema(
   {
     name: { type: String, required: true },
     gender: { type: String, enum: Object.values(Gender) },
-    dateOfBirth: Date,
+    specialization: String,
+    appointment: AppointmentSchema,
+    availability: AvailabilitySchema,
+    experience: String,
+    education: String,
     cnic: { type: String, required: true },
     cnicIV: { type: String, required: true },
-    specialization: String,
-    experienceYears: Number,
-    subSpecialization: [String],
-    qualifications: [String],
-    licenseNumber: { type: String, required: true },
-    contact: DoctorContactSchema,
-    hospitalIds: [{ type: Schema.Types.ObjectId, ref: 'Hospital' }],
-    availability: AvailabilitySchema
+    lisenceNumber: { type: String, required: true },
+    hospitalIds: { type: String }
   },
   { timestamps: true }
 );

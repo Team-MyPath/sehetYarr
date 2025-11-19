@@ -1,10 +1,8 @@
 import { Schema, model, models } from 'mongoose';
 import { BloodGroup, Gender, MedicalConditionStatus } from '../enums';
 
-const PatientContactSchema = new Schema(
+const PatientAddressSchema = new Schema(
   {
-    primaryNumber: String,
-    secondaryNumber: String,
     address: String,
     city: String,
     state: String
@@ -12,35 +10,45 @@ const PatientContactSchema = new Schema(
   { _id: false }
 );
 
-const EmergencyContactSchema = new Schema(
+const PatientDobSchema = new Schema(
   {
-    name: String,
-    relation: String,
-    phoneNo: String
+    day: String,
+    month: String,
+    year: String
   },
   { _id: false }
 );
 
-const MedicalHistoryItemSchema = new Schema(
+const EmergencyContactPersonSchema = new Schema(
   {
-    condition: String,
-    diagnosedAt: Date,
-    status: { type: String, enum: Object.values(MedicalConditionStatus) }
+    name: String,
+    contactNumber: String,
+    cnic: String,
+    relation: String
+  },
+  { _id: false }
+);
+
+const EmergencyContactSchema = new Schema(
+  {
+    primaryContact: EmergencyContactPersonSchema,
+    secondaryContact: EmergencyContactPersonSchema
   },
   { _id: false }
 );
 
 const PatientSchema = new Schema(
   {
-    name: { type: String, required: true },
-    gender: { type: String, required: true, enum: Object.values(Gender) },
-    dateOfBirth: { type: Date, required: true },
-    cnic: { type: String, required: true },
-    cnicIV: { type: String, required: true },
-    bloodGroup: { type: String, enum: Object.values(BloodGroup) },
-    contact: PatientContactSchema,
+    patientName: { type: String, required: true },
+    patientGender: { type: String, required: true, enum: Object.values(Gender) },
+    patientDob: { type: PatientDobSchema, required: true },
+    patientCnic: { type: String, required: true },
+    patientMobile: String,
+    patientBloodGroup: { type: String, enum: Object.values(BloodGroup) },
+    patientAddress: PatientAddressSchema,
+    patientDisability: String,
     emergencyContact: EmergencyContactSchema,
-    medicalHistory: [MedicalHistoryItemSchema]
+    patientHistory: [String]
   },
   { timestamps: true }
 );
