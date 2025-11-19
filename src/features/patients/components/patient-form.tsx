@@ -88,14 +88,14 @@ export default function PatientForm({
               form.setValue('gender', match.gender);
               if (match.dateOfBirth) form.setValue('dateOfBirth', new Date(match.dateOfBirth));
               if (match.bloodGroup) form.setValue('bloodGroup', match.bloodGroup);
-              if (match.contact?.primaryNumber) form.setValue('contact.primaryNumber', match.contact.primaryNumber);
-              if (match.contact?.secondaryNumber) form.setValue('contact.secondaryNumber', match.contact.secondaryNumber);
-              if (match.contact?.address) form.setValue('contact.address', match.contact.address);
-              if (match.contact?.city) form.setValue('contact.city', match.contact.city);
-              if (match.contact?.state) form.setValue('contact.state', match.contact.state);
-              if (match.emergencyContact?.name) form.setValue('emergencyContact.name', match.emergencyContact.name);
-              if (match.emergencyContact?.relation) form.setValue('emergencyContact.relation', match.emergencyContact.relation);
-              if (match.emergencyContact?.phoneNo) form.setValue('emergencyContact.phoneNo', match.emergencyContact.phoneNo);
+              if (match.contact?.primaryNumber) form.setValue('contact.primaryNumber' as any, match.contact.primaryNumber);
+              if (match.contact?.secondaryNumber) form.setValue('contact.secondaryNumber' as any, match.contact.secondaryNumber);
+              if (match.contact?.address) form.setValue('contact.address' as any, match.contact.address);
+              if (match.contact?.city) form.setValue('contact.city' as any, match.contact.city);
+              if (match.contact?.state) form.setValue('contact.state' as any, match.contact.state);
+              if (match.emergencyContact?.name) form.setValue('emergencyContact.name' as any, match.emergencyContact.name);
+              if (match.emergencyContact?.relation) form.setValue('emergencyContact.relation' as any, match.emergencyContact.relation);
+              if (match.emergencyContact?.phoneNo) form.setValue('emergencyContact.phoneNo' as any, match.emergencyContact.phoneNo);
             } else {
               setExistingPatient(null);
             }
