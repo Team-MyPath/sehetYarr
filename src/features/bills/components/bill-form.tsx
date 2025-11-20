@@ -4,6 +4,7 @@ import { FormInput } from '@/components/forms/form-input';
 import { FormSelect } from '@/components/forms/form-select';
 import { FormDatePicker } from '@/components/forms/form-date-picker';
 import { FormTextarea } from '@/components/forms/form-textarea';
+import { FormSearchableSelect, SearchableSelectOption } from '@/components/forms/form-searchable-select';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
@@ -14,6 +15,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
 import { useEffect, useState } from 'react';
+import { useUser } from '@clerk/nextjs';
 
 const statusOptions = [
   { label: 'Pending', value: 'Pending' },
@@ -49,40 +51,67 @@ export default function BillForm({
   initialData: Bill | null;
   pageTitle: string;
 }) {
-  const [patients, setPatients] = useState<Array<{ label: string; value: string }>>([]);
-  const [doctors, setDoctors] = useState<Array<{ label: string; value: string }>>([]);
+  const [patients, setPatients] = useState<SearchableSelectOption[]>([]);
+  const [doctors, setDoctors] = useState<SearchableSelectOption[]>([]);
   const [hospitals, setHospitals] = useState<Array<{ label: string; value: string }>>([]);
+  const { user } = useUser();
+  const isHospitalUser = user?.publicMetadata?.role === 'hospital';
+  const [userHospitalId, setUserHospitalId] = useState<string>('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [patientsRes, doctorsRes, hospitalsRes] = await Promise.all([
+        const [patientsRes, doctorsRes, hospitalsRes, userRes] = await Promise.all([
           fetch('/api/patients?limit=1000'),
           fetch('/api/doctors?limit=1000'),
-          fetch('/api/hospitals?limit=1000')
+          fetch('/api/hospitals?limit=1000'),
+          isHospitalUser ? fetch('/api/user/me') : Promise.resolve(null)
         ]);
 
-        const [patientsData, doctorsData, hospitalsData] = await Promise.all([
+        const [patientsData, doctorsData, hospitalsData, userData] = await Promise.all([
           patientsRes.json(),
           doctorsRes.json(),
-          hospitalsRes.json()
+          hospitalsRes.json(),
+          userRes ? userRes.json() : Promise.resolve(null)
         ]);
 
         if (patientsData.success) {
-          setPatients(patientsData.data.map((p: any) => ({ label: p.name, value: p._id })));
+          setPatients(patientsData.data.map((p: any) => ({
+            label: p.name,
+            value: p._id,
+            subtitle: `CNIC: ${p.cnic || 'N/A'}`,
+            searchText: `${p.name} ${p.cnic || ''}`
+          })));
         }
+
         if (doctorsData.success) {
-          setDoctors(doctorsData.data.map((d: any) => ({ label: d.name, value: d._id })));
+          setDoctors(doctorsData.data.map((d: any) => ({
+            label: d.name,
+            value: d._id,
+            subtitle: `CNIC: ${d.cnic || 'N/A'}`,
+            searchText: `${d.name} ${d.cnic || ''}`
+          })));
         }
+
         if (hospitalsData.success) {
-          setHospitals(hospitalsData.data.map((h: any) => ({ label: h.name, value: h._id })));
+          const hospitalsList = hospitalsData.data.map((h: any) => ({ label: h.name, value: h._id }));
+          setHospitals(hospitalsList);
+
+          // If user is hospital role, auto-fill with their hospital
+          if (isHospitalUser && userData?.success && userData.data.hospital) {
+            const hospitalId = userData.data.hospital._id;
+            setUserHospitalId(hospitalId);
+            if (!initialData) {
+              form.setValue('hospitalId', hospitalId);
+            }
+          }
         }
       } catch (error) {
         console.error('Failed to fetch data:', error);
       }
     };
     fetchData();
-  }, []);
+  }, [isHospitalUser, initialData]);
 
   const formatItems = (items?: Bill['items']) => {
     if (!items || items.length === 0) return '';
@@ -172,9 +201,30 @@ export default function BillForm({
       <CardContent>
         <Form form={form} onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
           <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
-            <FormSelect control={form.control} name='patientId' label='Patient' placeholder='Select patient' required options={patients} />
-            <FormSelect control={form.control} name='hospitalId' label='Hospital' placeholder='Select hospital' required options={hospitals} />
-            <FormSelect control={form.control} name='doctorId' label='Doctor (Optional)' placeholder='Select doctor' options={doctors} />
+            <FormSearchableSelect 
+              control={form.control} 
+              name='patientId' 
+              label='Patient' 
+              placeholder='Search patient...' 
+              required 
+              options={patients} 
+            />
+            <FormSelect 
+              control={form.control} 
+              name='hospitalId' 
+              label='Hospital' 
+              placeholder='Select hospital' 
+              required 
+              options={hospitals}
+              disabled={isHospitalUser}
+            />
+            <FormSearchableSelect 
+              control={form.control} 
+              name='doctorId' 
+              label='Doctor (Optional)' 
+              placeholder='Search doctor...' 
+              options={doctors} 
+            />
           </div>
 
           <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>

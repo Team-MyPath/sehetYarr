@@ -146,6 +146,14 @@ class LLMChatService {
   }
 
   /**
+   * Listen for progress update events
+   * @param callback - Function to handle progress updates with message payload
+   */
+  onProgressUpdate(callback: (data: { message: string; [key: string]: any }) => void): void {
+    socket.on(events.PROGRESS_UPDATE, callback);
+  }
+
+  /**
    * Listen for thinking start event
    * @param callback - Function to handle thinking start
    */

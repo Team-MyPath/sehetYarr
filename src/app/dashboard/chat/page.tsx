@@ -54,6 +54,7 @@ import { useCallback, useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { llmChatService } from "@/services/llmChat";
 import { useUser } from "@clerk/nextjs";
+import { ProgressNotification } from "@/components/chat/progress-notification";
 
 type MessageType = {
   key: string;
@@ -98,6 +99,8 @@ const Example = () => {
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const streamingContentRef = useRef<string>("");
   const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [progressMessage, setProgressMessage] = useState<string>("");
+  const [showProgress, setShowProgress] = useState<boolean>(false);
   // Initialize chat session on mount
   useEffect(() => {
     const initChat = async () => {
@@ -140,8 +143,17 @@ const Example = () => {
   useEffect(() => {
     if (!isInitialized || !chatId) return;
 
+    let isStreamingActive = false; // Flag to track if we're still receiving chunks
+
     // Handle incoming chunks from AI
     const handleChunk = (data: { chunk: string }) => {
+      console.log("Received chunk:", data);
+      
+      // Only process chunks if streaming is active (not completed)
+      if (!isStreamingActive) {
+        isStreamingActive = true;
+      }
+
       setMessages((prev) => {
         const lastIndex = prev.length - 1;
         const lastMessage = prev[lastIndex];
@@ -188,11 +200,47 @@ const Example = () => {
       if (streamingTimeoutRef.current) {
         clearTimeout(streamingTimeoutRef.current);
       }
+    };
 
-      // Set a timeout to mark as complete if no more chunks arrive
-      streamingTimeoutRef.current = setTimeout(() => {
-        setStatus("ready");
-      }, 2000); // Wait 2 seconds after last chunk
+    // Handle generation complete - stop rendering chunks
+    const handleGenerationComplete = () => {
+      console.log("Generation complete - stopping chunk rendering");
+      
+      // Mark streaming as complete
+      isStreamingActive = false;
+      
+      // Clear any pending timeouts
+      if (streamingTimeoutRef.current) {
+        clearTimeout(streamingTimeoutRef.current);
+        streamingTimeoutRef.current = null;
+      }
+
+      // Hide progress notification
+      setShowProgress(false);
+      setProgressMessage("");
+
+      // Set status to ready
+      setStatus("ready");
+      
+      // Optionally finalize the last message (ensure it's marked as complete)
+      setMessages((prev) => {
+        const lastIndex = prev.length - 1;
+        const lastMessage = prev[lastIndex];
+
+        if (lastMessage?.from === "assistant") {
+          // Message is finalized, no more chunks will be added
+          return prev;
+        }
+
+        return prev;
+      });
+    };
+
+    // Handle progress updates
+    const handleProgressUpdate = (data: { message: string }) => {
+      console.log("Progress update:", data);
+      setProgressMessage(data.message);
+      setShowProgress(true);
     };
 
     // Handle errors
@@ -202,6 +250,7 @@ const Example = () => {
         description: error.message || "An error occurred",
       });
       setStatus("error");
+      isStreamingActive = false;
     };
 
     // Handle reconnection
@@ -217,8 +266,10 @@ const Example = () => {
       }
     };
 
-    // Register listeners - only the ones we need
+    // Register listeners
     llmChatService.onChunk(handleChunk);
+    llmChatService.onGenerationComplete(handleGenerationComplete);
+    llmChatService.onProgressUpdate(handleProgressUpdate);
     llmChatService.onError(handleError);
     llmChatService.onReconnect(handleReconnect);
 
@@ -309,6 +360,9 @@ const Example = () => {
 
   return (
     <div className='relative flex size-full h-[91vh] flex-col divide-y overflow-hidden'>
+      {/* Progress notification bubble */}
+      <ProgressNotification message={progressMessage} isVisible={showProgress} />
+      
       <Conversation>
         <ConversationContent>
           {messages.map(({ versions, ...message }) => (

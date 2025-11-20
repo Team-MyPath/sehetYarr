@@ -4,6 +4,7 @@ import { FormInput } from '@/components/forms/form-input';
 import { FormSelect } from '@/components/forms/form-select';
 import { FormDatePicker } from '@/components/forms/form-date-picker';
 import { FormTextarea } from '@/components/forms/form-textarea';
+import { FormSearchableSelect, SearchableSelectOption } from '@/components/forms/form-searchable-select';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
@@ -33,8 +34,8 @@ export default function AppointmentForm({
   initialData: Appointment | null;
   pageTitle: string;
 }) {
-  const [patients, setPatients] = useState<Array<{ label: string; value: string }>>([]);
-  const [doctors, setDoctors] = useState<Array<{ label: string; value: string }>>([]);
+  const [patients, setPatients] = useState<SearchableSelectOption[]>([]);
+  const [doctors, setDoctors] = useState<SearchableSelectOption[]>([]);
   const [hospitals, setHospitals] = useState<Array<{ label: string; value: string }>>([]);
 
   useEffect(() => {
@@ -55,14 +56,18 @@ export default function AppointmentForm({
         if (patientsData.success) {
           setPatients(patientsData.data.map((p: any) => ({
             label: p.name,
-            value: p._id
+            value: p._id,
+            subtitle: `CNIC: ${p.cnic || 'N/A'}`,
+            searchText: `${p.name} ${p.cnic || ''}`
           })));
         }
 
         if (doctorsData.success) {
           setDoctors(doctorsData.data.map((d: any) => ({
             label: d.name,
-            value: d._id
+            value: d._id,
+            subtitle: `CNIC: ${d.cnic || 'N/A'}`,
+            searchText: `${d.name} ${d.cnic || ''}`
           })));
         }
 
@@ -151,22 +156,24 @@ export default function AppointmentForm({
       <CardContent>
         <Form form={form} onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
           <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
-            <FormSelect 
+            <FormSearchableSelect 
               control={form.control} 
               name='patientId' 
               label='Patient' 
               placeholder='Select patient'
               required
               options={patients}
+              emptyMessage='No patients found.'
             />
             
-            <FormSelect 
+            <FormSearchableSelect 
               control={form.control} 
               name='doctorId' 
               label='Doctor' 
               placeholder='Select doctor'
               required
               options={doctors}
+              emptyMessage='No doctors found.'
             />
             
             <FormSelect 

@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
 
     const query: any = {};
 
-    // Role-based filtering
+    // Role-based access control
     if (userId) {
       const user = await UserModel.findOne({ clerkId: userId });
       if (user) {

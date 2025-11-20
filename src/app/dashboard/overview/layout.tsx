@@ -8,38 +8,85 @@ import {
   CardAction,
   CardFooter
 } from '@/components/ui/card';
-import { IconTrendingDown, IconTrendingUp, IconUsers, IconBuilding, IconStethoscope, IconHeartbeat } from '@tabler/icons-react';
+import { IconTrendingDown, IconTrendingUp, IconUsers, IconBuilding, IconStethoscope, IconHeartbeat, IconCalendar } from '@tabler/icons-react';
 import React from 'react';
+import { auth } from '@clerk/nextjs/server';
 
-// Fetch healthcare statistics
+// Fetch healthcare statistics (role-based)
 async function getHealthcareStats() {
   try {
-    const [patientsRes, doctorsRes, hospitalsRes] = await Promise.all([
+    const { userId } = await auth();
+    
+    const [patientsRes, doctorsRes, hospitalsRes, userRes, appointmentsRes] = await Promise.all([
       fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/patients`, { cache: 'no-store' }),
       fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/doctors`, { cache: 'no-store' }),
-      fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/hospitals`, { cache: 'no-store' })
+      fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/hospitals`, { cache: 'no-store' }),
+      userId ? fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/user/me`, { cache: 'no-store' }) : Promise.resolve(null),
+      fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/appointments`, { cache: 'no-store' })
     ]);
 
-    const [patientsData, doctorsData, hospitalsData] = await Promise.all([
+    const [patientsData, doctorsData, hospitalsData, userData, appointmentsData] = await Promise.all([
       patientsRes.json(),
       doctorsRes.json(),
-      hospitalsRes.json()
+      hospitalsRes.json(),
+      userRes ? userRes.json() : Promise.resolve(null),
+      appointmentsRes.json()
     ]);
 
+    const role = userData?.data?.role || 'guest';
+
     return {
+      role,
       totalPatients: patientsData.pagination?.total || patientsData.data?.length || 0,
       totalDoctors: doctorsData.pagination?.total || doctorsData.data?.length || 0,
       totalHospitals: hospitalsData.pagination?.total || hospitalsData.data?.length || 0,
+      totalAppointments: appointmentsData.pagination?.total || appointmentsData.data?.length || 0,
       activePatients: Math.floor((patientsData.pagination?.total || 0) * 0.85), // Assuming 85% are active
     };
   } catch (error) {
     console.error('Error fetching healthcare stats:', error);
     return {
+      role: 'guest',
       totalPatients: 0,
       totalDoctors: 0,
       totalHospitals: 0,
+      totalAppointments: 0,
       activePatients: 0
     };
+  }
+}
+
+// Get role-specific card labels
+function getCardLabels(role: string) {
+  switch (role) {
+    case 'hospital':
+      return {
+        patients: { title: 'My Patients', description: 'Patients at your facility' },
+        doctors: { title: 'My Doctors', description: 'Doctors at your hospital' },
+        facilities: { title: 'My Facility', description: 'Your healthcare facility' },
+        cases: { title: 'Active Cases', description: 'Ongoing treatments at facility' }
+      };
+    case 'doctor':
+      return {
+        patients: { title: 'My Patients', description: 'Patients under your care' },
+        doctors: { title: 'Your Profile', description: 'Your doctor profile' },
+        facilities: { title: 'Hospitals', description: 'Hospitals you work with' },
+        cases: { title: 'Your Appointments', description: 'Your scheduled appointments' }
+      };
+    case 'admin':
+      return {
+        patients: { title: 'Total Patients', description: 'All registered patients' },
+        doctors: { title: 'Active Doctors', description: 'All medical professionals' },
+        facilities: { title: 'Healthcare Facilities', description: 'All partner hospitals' },
+        cases: { title: 'Active Cases', description: 'All ongoing treatments' }
+      };
+    default:
+      return {
+        patients: { title: 'Patients', description: 'Patient records' },
+        doctors: { title: 'Doctors', description: 'Medical professionals' },
+        facilities: { title: 'Facilities', description: 'Healthcare facilities' },
+        cases: { title: 'Cases', description: 'Active treatments' }
+      };
   }
 }
 
@@ -55,6 +102,8 @@ export default async function OverViewLayout({
   area_stats: React.ReactNode;
 }) {
   const stats = await getHealthcareStats();
+  const labels = getCardLabels(stats.role);
+  
   return (
     <PageContainer>
       <div className='flex flex-1 flex-col space-y-2'>
@@ -69,7 +118,7 @@ export default async function OverViewLayout({
             <CardHeader>
               <CardDescription className='flex items-center gap-2'>
                 <IconUsers className='size-4' />
-                Total Patients
+                {labels.patients.title}
               </CardDescription>
               <CardTitle className='text-2xl font-semibold tabular-nums @[250px]/card:text-3xl'>
                 {stats.totalPatients.toLocaleString()}
@@ -83,21 +132,21 @@ export default async function OverViewLayout({
             </CardHeader>
             <CardFooter className='flex-col items-start gap-1.5 text-sm'>
               <div className='line-clamp-1 flex gap-2 font-medium'>
-                Growing patient base <IconTrendingUp className='size-4' />
+                {stats.role === 'hospital' ? 'Patient registrations' : stats.role === 'doctor' ? 'Patients under care' : 'Growing patient base'} <IconTrendingUp className='size-4' />
               </div>
               <div className='text-muted-foreground'>
-                Registered patients in system
+                {labels.patients.description}
               </div>
             </CardFooter>
           </Card>
           <Card className='@container/card'>
             <CardHeader>
               <CardDescription className='flex items-center gap-2'>
-                <IconStethoscope className='size-4' />
-                Active Doctors
+                {stats.role === 'doctor' ? <IconCalendar className='size-4' /> : <IconStethoscope className='size-4' />}
+                {labels.doctors.title}
               </CardDescription>
               <CardTitle className='text-2xl font-semibold tabular-nums @[250px]/card:text-3xl'>
-                {stats.totalDoctors.toLocaleString()}
+                {stats.role === 'doctor' ? stats.totalAppointments.toLocaleString() : stats.totalDoctors.toLocaleString()}
               </CardTitle>
               <CardAction>
                 <Badge variant='outline'>
@@ -108,10 +157,10 @@ export default async function OverViewLayout({
             </CardHeader>
             <CardFooter className='flex-col items-start gap-1.5 text-sm'>
               <div className='line-clamp-1 flex gap-2 font-medium'>
-                Medical staff available <IconTrendingUp className='size-4' />
+                {stats.role === 'doctor' ? 'Your appointments' : 'Medical staff'} <IconTrendingUp className='size-4' />
               </div>
               <div className='text-muted-foreground'>
-                Qualified healthcare providers
+                {labels.doctors.description}
               </div>
             </CardFooter>
           </Card>
@@ -119,7 +168,7 @@ export default async function OverViewLayout({
             <CardHeader>
               <CardDescription className='flex items-center gap-2'>
                 <IconBuilding className='size-4' />
-                Healthcare Facilities
+                {labels.facilities.title}
               </CardDescription>
               <CardTitle className='text-2xl font-semibold tabular-nums @[250px]/card:text-3xl'>
                 {stats.totalHospitals.toLocaleString()}
@@ -133,10 +182,10 @@ export default async function OverViewLayout({
             </CardHeader>
             <CardFooter className='flex-col items-start gap-1.5 text-sm'>
               <div className='line-clamp-1 flex gap-2 font-medium'>
-                Network expansion <IconTrendingUp className='size-4' />
+                {stats.role === 'hospital' ? 'Your facility' : 'Network'} <IconTrendingUp className='size-4' />
               </div>
               <div className='text-muted-foreground'>
-                Partner hospitals and clinics
+                {labels.facilities.description}
               </div>
             </CardFooter>
           </Card>
@@ -144,7 +193,7 @@ export default async function OverViewLayout({
             <CardHeader>
               <CardDescription className='flex items-center gap-2'>
                 <IconHeartbeat className='size-4' />
-                Active Cases
+                {labels.cases.title}
               </CardDescription>
               <CardTitle className='text-2xl font-semibold tabular-nums @[250px]/card:text-3xl'>
                 {stats.activePatients.toLocaleString()}
@@ -158,10 +207,10 @@ export default async function OverViewLayout({
             </CardHeader>
             <CardFooter className='flex-col items-start gap-1.5 text-sm'>
               <div className='line-clamp-1 flex gap-2 font-medium'>
-                Ongoing treatments <IconTrendingUp className='size-4' />
+                {stats.role === 'doctor' ? 'Patients under care' : 'Ongoing treatments'} <IconTrendingUp className='size-4' />
               </div>
               <div className='text-muted-foreground'>
-                Patients under active care
+                {labels.cases.description}
               </div>
             </CardFooter>
           </Card>

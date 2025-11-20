@@ -19,14 +19,10 @@ import {
   ChartTooltipContent
 } from '@/components/ui/chart';
 
-// Generate sample patient demographics data
-const chartData = [
-  { demographic: 'male', patients: 145, fill: 'var(--primary)' },
-  { demographic: 'female', patients: 167, fill: 'var(--primary-light)' },
-  { demographic: 'pediatric', patients: 89, fill: 'var(--primary-lighter)' },
-  { demographic: 'elderly', patients: 124, fill: 'var(--primary-dark)' },
-  { demographic: 'other', patients: 23, fill: 'var(--primary-darker)' }
-];
+interface PieGraphProps {
+  data: Array<{ demographic: string; patients: number }>;
+  role?: string;
+}
 
 const chartConfig = {
   patients: {
@@ -54,27 +50,69 @@ const chartConfig = {
   }
 } satisfies ChartConfig;
 
-export function PieGraph() {
+export function PieGraph({ data, role = 'guest' }: PieGraphProps) {
+  const chartData = data.length > 0 ? data : [];
+
   const totalPatients = React.useMemo(() => {
     return chartData.reduce((acc, curr) => acc + curr.patients, 0);
-  }, []);
+  }, [chartData]);
 
   const leadingDemographic = React.useMemo(() => {
+    if (chartData.length === 0) return null;
     return chartData.reduce((max, current) => 
       current.patients > max.patients ? current : max
     );
-  }, []);
+  }, [chartData]);
+
+  const getTitle = () => {
+    switch (role) {
+      case 'hospital':
+        return 'Facility Patient Demographics';
+      case 'doctor':
+        return 'Your Patient Demographics';
+      default:
+        return 'Patient Demographics';
+    }
+  };
+
+  const getDescription = () => {
+    switch (role) {
+      case 'hospital':
+        return 'Distribution of patients at your facility';
+      case 'doctor':
+        return 'Distribution of patients under your care';
+      default:
+        return 'Distribution of patients by demographics';
+    }
+  };
+
+  if (chartData.length === 0) {
+    return (
+      <Card className='@container/card'>
+        <CardHeader>
+          <CardTitle className='flex items-center gap-2'>
+            <IconUsers className='size-5' />
+            {getTitle()}
+          </CardTitle>
+          <CardDescription>No patient demographic data available</CardDescription>
+        </CardHeader>
+        <CardContent className='flex items-center justify-center h-[250px]'>
+          <p className='text-muted-foreground text-sm'>No data to display</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className='@container/card'>
       <CardHeader>
         <CardTitle className='flex items-center gap-2'>
           <IconUsers className='size-5' />
-          Patient Demographics
+          {getTitle()}
         </CardTitle>
         <CardDescription>
           <span className='hidden @[540px]/card:block'>
-            Distribution of patients by demographics
+            {getDescription()}
           </span>
           <span className='@[540px]/card:hidden'>Patient breakdown</span>
         </CardDescription>
@@ -159,14 +197,18 @@ export function PieGraph() {
         </ChartContainer>
       </CardContent>
       <CardFooter className='flex-col gap-2 text-sm'>
-        <div className='flex items-center gap-2 leading-none font-medium'>
-          {chartConfig[leadingDemographic.demographic as keyof typeof chartConfig]?.label} leads with{' '}
-          {((leadingDemographic.patients / totalPatients) * 100).toFixed(1)}%{' '}
-          <IconTrendingUp className='h-4 w-4' />
-        </div>
-        <div className='text-muted-foreground leading-none'>
-          Based on current patient registrations
-        </div>
+        {leadingDemographic && (
+          <>
+            <div className='flex items-center gap-2 leading-none font-medium'>
+              {chartConfig[leadingDemographic.demographic as keyof typeof chartConfig]?.label} leads with{' '}
+              {((leadingDemographic.patients / totalPatients) * 100).toFixed(1)}%{' '}
+              <IconTrendingUp className='h-4 w-4' />
+            </div>
+            <div className='text-muted-foreground leading-none'>
+              Based on current patient registrations
+            </div>
+          </>
+        )}
       </CardFooter>
     </Card>
   );

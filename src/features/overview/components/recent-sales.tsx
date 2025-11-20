@@ -7,18 +7,36 @@ import {
   CardDescription
 } from '@/components/ui/card';
 import { formatDistanceToNow } from 'date-fns';
+import { auth } from '@clerk/nextjs/server';
 
-// Fetch recent patient registrations
+// Fetch recent patient registrations (role-based)
 async function getRecentPatients() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/patients?limit=5`, {
-      cache: 'no-store'
-    });
-    const data = await response.json();
-    return data.success ? data.data : [];
+    const { userId } = await auth();
+    
+    const [patientsResponse, userResponse] = await Promise.all([
+      fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/patients?limit=5`, {
+        cache: 'no-store'
+      }),
+      userId ? fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/user/me`, {
+        cache: 'no-store'
+      }) : Promise.resolve(null)
+    ]);
+    
+    const [patientsData, userData] = await Promise.all([
+      patientsResponse.json(),
+      userResponse ? userResponse.json() : Promise.resolve(null)
+    ]);
+    
+    const role = userData?.data?.role || 'guest';
+    
+    return {
+      patients: patientsData.success ? patientsData.data : [],
+      role
+    };
   } catch (error) {
     console.error('Error fetching recent patients:', error);
-    return [];
+    return { patients: [], role: 'guest' };
   }
 }
 
@@ -39,16 +57,43 @@ function generateAvatarUrl(name: string) {
 }
 
 export async function RecentSales() {
-  const patients = await getRecentPatients();
+  const { patients, role } = await getRecentPatients();
+
+  const getTitle = () => {
+    switch (role) {
+      case 'hospital':
+        return 'Recent Patient Registrations';
+      case 'doctor':
+        return 'Your Recent Patients';
+      case 'admin':
+        return 'Recent Patient Registrations';
+      default:
+        return 'Recent Activity';
+    }
+  };
+
+  const getDescription = () => {
+    if (patients.length > 0) {
+      switch (role) {
+        case 'hospital':
+          return `${patients.length} new patients at your facility.`;
+        case 'doctor':
+          return `${patients.length} patients you've seen recently.`;
+        default:
+          return `${patients.length} new patients registered recently.`;
+      }
+    }
+    return role === 'doctor' 
+      ? 'No recent patient visits.'
+      : 'No recent patient registrations.';
+  };
 
   return (
     <Card className='h-full'>
       <CardHeader>
-        <CardTitle>Recent Patient Registrations</CardTitle>
+        <CardTitle>{getTitle()}</CardTitle>
         <CardDescription>
-          {patients.length > 0 
-            ? `${patients.length} new patients registered recently.`
-            : 'No recent patient registrations.'}
+          {getDescription()}
         </CardDescription>
       </CardHeader>
       <CardContent>

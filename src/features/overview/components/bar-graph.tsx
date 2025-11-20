@@ -19,31 +19,10 @@ import {
 
 export const description = 'Healthcare registrations over time';
 
-// Generate sample healthcare data for the last 3 months
-function generateHealthcareData() {
-  const data = [];
-  const startDate = new Date();
-  startDate.setMonth(startDate.getMonth() - 3);
-  
-  for (let i = 0; i < 90; i++) {
-    const date = new Date(startDate);
-    date.setDate(date.getDate() + i);
-    
-    // Generate realistic healthcare registration numbers
-    const patients = Math.floor(Math.random() * 15) + 5; // 5-20 patients per day
-    const doctors = Math.floor(Math.random() * 3) + 1; // 1-4 doctors per day
-    
-    data.push({
-      date: date.toISOString().split('T')[0],
-      patients,
-      doctors
-    });
-  }
-  
-  return data;
+interface BarGraphProps {
+  data: Array<{ date: string; patients: number; doctors: number }>;
+  role?: string;
 }
-
-const chartData = generateHealthcareData();
 
 const chartConfig = {
   registrations: {
@@ -59,16 +38,39 @@ const chartConfig = {
   }
 } satisfies ChartConfig;
 
-export function BarGraph() {
+export function BarGraph({ data, role = 'guest' }: BarGraphProps) {
+  const chartData = data.length > 0 ? data : [];
   const [activeChart, setActiveChart] =
     React.useState<keyof typeof chartConfig>('patients');
+
+  const getTitle = () => {
+    switch (role) {
+      case 'hospital':
+        return 'Facility Registrations';
+      case 'doctor':
+        return 'Your Patient Growth';
+      default:
+        return 'Healthcare Registrations';
+    }
+  };
+
+  const getDescription = () => {
+    switch (role) {
+      case 'hospital':
+        return 'New registrations at your facility for the last 3 months';
+      case 'doctor':
+        return 'New patients under your care for the last 3 months';
+      default:
+        return 'New registrations for the last 3 months';
+    }
+  };
 
   const total = React.useMemo(
     () => ({
       patients: chartData.reduce((acc, curr) => acc + curr.patients, 0),
       doctors: chartData.reduce((acc, curr) => acc + curr.doctors, 0)
     }),
-    []
+    [chartData]
   );
 
   const [isClient, setIsClient] = React.useState(false);
@@ -81,14 +83,28 @@ export function BarGraph() {
     return null;
   }
 
+  if (chartData.length === 0) {
+    return (
+      <Card className='@container/card !pt-3'>
+        <CardHeader>
+          <CardTitle>{getTitle()}</CardTitle>
+          <CardDescription>No registration data available</CardDescription>
+        </CardHeader>
+        <CardContent className='flex items-center justify-center h-[250px]'>
+          <p className='text-muted-foreground text-sm'>No data to display</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className='@container/card !pt-3'>
       <CardHeader className='flex flex-col items-stretch space-y-0 border-b !p-0 sm:flex-row'>
         <div className='flex flex-1 flex-col justify-center gap-1 px-6 !py-0'>
-          <CardTitle>Healthcare Registrations</CardTitle>
+          <CardTitle>{getTitle()}</CardTitle>
           <CardDescription>
             <span className='hidden @[540px]/card:block'>
-              New registrations for the last 3 months
+              {getDescription()}
             </span>
             <span className='@[540px]/card:hidden'>Last 3 months</span>
           </CardDescription>

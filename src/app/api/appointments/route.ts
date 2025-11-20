@@ -3,6 +3,8 @@ import { connectDB } from "@/lib/db/connect";
 import { AppointmentModel } from "@/lib/models/appointment.model";
 import { UserModel, UserRole } from "@/lib/models/user.model";
 import { PatientModel } from "@/lib/models/patient.model";
+import { HospitalModel } from "@/lib/models/hospital.model";
+import { DoctorModel } from "@/lib/models/doctor.model";
 import { AppointmentStatus, Priority } from "@/lib/enums";
 import { logger } from "@/lib/utils/logger";
 import { isValidObjectId } from "mongoose";
@@ -49,7 +51,48 @@ export async function GET(req: NextRequest) {
               pagination: { page, limit, total: 0, pages: 0 }
             });
           }
+        } else if (user.role === UserRole.HOSPITAL) {
+          // Find the hospital record associated with this user
+          const hospital = await HospitalModel.findOne({
+            $or: [
+              { userId: user._id },
+              { email: user.email }
+            ]
+          });
+
+          if (hospital) {
+            // Only show appointments at this hospital
+            query.hospitalId = hospital._id;
+          } else {
+            // If user is a hospital but has no hospital record, they shouldn't see any appointments
+            return NextResponse.json({
+              success: true,
+              data: [],
+              pagination: { page, limit, total: 0, pages: 0 }
+            });
+          }
+        } else if (user.role === UserRole.DOCTOR) {
+          // Find the doctor record associated with this user
+          const doctor = await DoctorModel.findOne({
+            $or: [
+              { userId: user._id },
+              { email: user.email }
+            ]
+          });
+
+          if (doctor) {
+            // Only show appointments with this doctor
+            query.doctorId = doctor._id;
+          } else {
+            // If user is a doctor but has no doctor record, they shouldn't see any appointments
+            return NextResponse.json({
+              success: true,
+              data: [],
+              pagination: { page, limit, total: 0, pages: 0 }
+            });
+          }
         }
+        // Admin role has no restrictions - sees all appointments
       }
     }
 

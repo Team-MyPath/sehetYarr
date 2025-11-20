@@ -7,6 +7,7 @@ export const events = {
   USER_MESSAGE: "user_message",
   AI_CHUNK: "ai_chunk",
   GENERATION_COMPLETE: "generation_complete",
+  PROGRESS_UPDATE: "progress_update",
   THINKING_START: "thinking_start",
   THINKING_END: "thinking_end",
   QUIZ_ARTIFACT_GENERATED: "quiz_artifact_generated",

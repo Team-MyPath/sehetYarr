@@ -8,6 +8,7 @@ const routeAccess = {
   admin: ['/dashboard(.*)'],
   hospital: [
     '/dashboard/overview',
+    '/dashboard/chat',
     '/dashboard/profile',
     '/dashboard/appointments',
     '/dashboard/patients',
@@ -33,6 +34,7 @@ const routeAccess = {
     '/dashboard/profile',
     '/dashboard/appointments',
     '/dashboard/patients',
+    '/dashboard/chat',
     '/dashboard/bills',
     '/dashboard/capacity',
     '/dashboard/facilities',

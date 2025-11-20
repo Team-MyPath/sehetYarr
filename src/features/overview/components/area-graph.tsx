@@ -18,15 +18,10 @@ import {
   ChartTooltipContent
 } from '@/components/ui/chart';
 
-// Generate sample appointment data for the last 6 months
-const chartData = [
-  { month: 'July', scheduled: 186, completed: 156 },
-  { month: 'August', scheduled: 305, completed: 278 },
-  { month: 'September', scheduled: 237, completed: 215 },
-  { month: 'October', scheduled: 273, completed: 248 },
-  { month: 'November', scheduled: 309, completed: 285 },
-  { month: 'December', scheduled: 334, completed: 302 }
-];
+interface AreaGraphProps {
+  data: Array<{ month: string; scheduled: number; completed: number }>;
+  role?: string;
+}
 
 const chartConfig = {
   appointments: {
@@ -42,20 +37,64 @@ const chartConfig = {
   }
 } satisfies ChartConfig;
 
-export function AreaGraph() {
+export function AreaGraph({ data, role = 'guest' }: AreaGraphProps) {
+  const chartData = data.length > 0 ? data : [];
   const totalScheduled = chartData.reduce((acc, curr) => acc + curr.scheduled, 0);
   const totalCompleted = chartData.reduce((acc, curr) => acc + curr.completed, 0);
-  const completionRate = ((totalCompleted / totalScheduled) * 100).toFixed(1);
+  const completionRate = totalScheduled > 0 ? ((totalCompleted / totalScheduled) * 100).toFixed(1) : '0';
+  
+  const currentYear = new Date().getFullYear();
+  const startMonth = chartData.length > 0 ? chartData[0].month : 'N/A';
+  const endMonth = chartData.length > 0 ? chartData[chartData.length - 1].month : 'N/A';
+
+  const getTitle = () => {
+    switch (role) {
+      case 'hospital':
+        return 'Facility Appointment Trends';
+      case 'doctor':
+        return 'Your Appointment Trends';
+      default:
+        return 'Appointment Trends';
+    }
+  };
+
+  const getDescription = () => {
+    switch (role) {
+      case 'hospital':
+        return 'Appointments at your facility for the last 6 months';
+      case 'doctor':
+        return 'Your scheduled vs completed appointments for the last 6 months';
+      default:
+        return 'Scheduled vs completed appointments for the last 6 months';
+    }
+  };
+
+  if (chartData.length === 0) {
+    return (
+      <Card className='@container/card'>
+        <CardHeader>
+          <CardTitle className='flex items-center gap-2'>
+            <IconCalendarEvent className='size-5' />
+            {getTitle()}
+          </CardTitle>
+          <CardDescription>No appointment data available</CardDescription>
+        </CardHeader>
+        <CardContent className='flex items-center justify-center h-[250px]'>
+          <p className='text-muted-foreground text-sm'>No data to display</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className='@container/card'>
       <CardHeader>
         <CardTitle className='flex items-center gap-2'>
           <IconCalendarEvent className='size-5' />
-          Appointment Trends
+          {getTitle()}
         </CardTitle>
         <CardDescription>
-          Scheduled vs completed appointments for the last 6 months
+          {getDescription()}
         </CardDescription>
       </CardHeader>
       <CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
@@ -134,7 +173,7 @@ export function AreaGraph() {
               <IconTrendingUp className='h-4 w-4' />
             </div>
             <div className='text-muted-foreground flex items-center gap-2 leading-none'>
-              July - December 2024 • {totalCompleted.toLocaleString()} completed appointments
+              {startMonth} - {endMonth} {currentYear} • {totalCompleted.toLocaleString()} completed appointments
             </div>
           </div>
         </div>

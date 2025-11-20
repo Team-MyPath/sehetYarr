@@ -58,6 +58,7 @@ const roleAccessMap: Record<string, string[]> = {
     '/dashboard/facilities',
     '/dashboard/capacity',
     '/dashboard/bills',
+    '/dashboard/chat',
     '/dashboard/workers',
     '/dashboard/pharmacy'
   ],
@@ -78,6 +79,7 @@ const roleAccessMap: Record<string, string[]> = {
     '/dashboard/capacity',
     '/dashboard/facilities',
     '/dashboard/hospitals',
+    '/dashboard/chat',
     '/dashboard/doctors',
     '/dashboard/kanban'
   ],
