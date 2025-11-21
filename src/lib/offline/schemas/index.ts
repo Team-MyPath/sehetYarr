@@ -4,6 +4,10 @@ export { appointmentSchema } from './appointment.schema';
 export { hospitalSchema } from './hospital.schema';
 export { billSchema } from './bill.schema';
 export { medicalRecordSchema } from './medical-record.schema';
+export { workerSchema } from './worker.schema';
+export { facilitySchema } from './facility.schema';
+export { capacitySchema } from './capacity.schema';
+export { pharmacySchema } from './pharmacy.schema';
 
 export type { PatientDocType } from './patient.schema';
 export type { DoctorDocType } from './doctor.schema';
@@ -11,3 +15,7 @@ export type { AppointmentDocType } from './appointment.schema';
 export type { HospitalDocType } from './hospital.schema';
 export type { BillDocType } from './bill.schema';
 export type { MedicalRecordDocType } from './medical-record.schema';
+export type { WorkerDocType } from './worker.schema';
+export type { FacilityDocType } from './facility.schema';
+export type { CapacityDocType } from './capacity.schema';
+export type { PharmacyDocType } from './pharmacy.schema';

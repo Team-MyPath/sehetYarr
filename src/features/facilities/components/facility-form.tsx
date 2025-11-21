@@ -12,6 +12,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
 import { useEffect, useState } from 'react';
+import { submitWithOfflineSupport } from '@/lib/offline/form-submission';
 
 const categoryOptions = [
   { label: 'Equipment', value: 'Equipment' },
@@ -91,21 +92,22 @@ export default function FacilityForm({
         : '/api/facilities';
       const method = initialData ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        toast.success(initialData ? 'Facility updated successfully' : 'Facility created successfully');
-        router.push('/dashboard/facilities');
-        router.refresh();
-      } else {
-        toast.error(result.message || 'Something went wrong');
-      }
+      await submitWithOfflineSupport(
+        'facilities',
+        payload,
+        {
+          apiEndpoint: url,
+          method,
+          id: initialData?._id,
+          onSuccess: (result) => {
+            router.push('/dashboard/facilities');
+            router.refresh();
+          },
+          onError: (error) => {
+            console.error(error);
+          }
+        }
+      );
     } catch (error) {
       toast.error('Failed to save facility');
     }

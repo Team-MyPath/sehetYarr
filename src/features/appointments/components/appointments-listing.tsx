@@ -3,61 +3,55 @@
 import { columns } from './appointments-tables/columns';
 import { AppointmentTable } from './appointments-tables';
 import { Appointment } from '@/types/appointment';
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { useQueryState, parseAsInteger } from 'nuqs';
 import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
+import { useOfflineData } from '@/hooks/use-offline-data';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { WifiOff } from 'lucide-react';
 
 export default function AppointmentsListingPage() {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [totalItems, setTotalItems] = useState(0);
-  const [loading, setLoading] = useState(true);
-
   const [page] = useQueryState('page', parseAsInteger.withDefault(1));
   const [perPage] = useQueryState('perPage', parseAsInteger.withDefault(10));
   const [search] = useQueryState('search');
   const [status] = useQueryState('status');
   const [priority] = useQueryState('priority');
 
-  useEffect(() => {
-    const fetchAppointments = async () => {
-      setLoading(true);
-      try {
-        const params = new URLSearchParams({
-          page: page.toString(),
-          limit: perPage.toString(),
-          ...(search && { search }),
-          ...(status && { status }),
-          ...(priority && { priority })
-        });
-
-        const response = await fetch(`/api/appointments?${params}`);
-        const data = await response.json();
-
-        if (data.success) {
-          setAppointments(data.data || []);
-          setTotalItems(data.pagination?.total || 0);
-        }
-      } catch (error) {
-        console.error('Failed to fetch appointments:', error);
-        setAppointments([]);
-        setTotalItems(0);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAppointments();
+  const apiEndpoint = useMemo(() => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: perPage.toString(),
+      ...(search && { search }),
+      ...(status && { status }),
+      ...(priority && { priority })
+    });
+    return `/api/appointments?${params}`;
   }, [page, perPage, search, status, priority]);
+
+  const { data: appointments, totalItems, loading, isFromCache } = useOfflineData<Appointment>({
+    collection: 'appointments',
+    apiEndpoint,
+  });
 
   if (loading) {
     return <DataTableSkeleton columnCount={8} rowCount={10} filterCount={2} />;
   }
 
   return (
-    <AppointmentTable
-      data={appointments}
-      totalItems={totalItems}
-      columns={columns}
-    />
+    <>
+      {isFromCache && (
+        <Alert className="mb-4 border-amber-500 bg-amber-50 dark:bg-amber-950">
+          <WifiOff className="h-4 w-4" />
+          <AlertDescription>
+            You're offline. Showing cached data. Changes will sync when you're back online.
+          </AlertDescription>
+        </Alert>
+      )}
+      <AppointmentTable
+        data={appointments}
+        totalItems={totalItems}
+        columns={columns}
+      />
+    </>
   );
 }

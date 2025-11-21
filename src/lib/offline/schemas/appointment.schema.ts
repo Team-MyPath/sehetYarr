@@ -24,16 +24,22 @@ export const appointmentSchema: RxJsonSchema<AppointmentDocType> = {
       maxLength: 100
     },
     patientId: {
-      type: 'string',
-      maxLength: 100
+      oneOf: [
+        { type: 'string' },
+        { type: 'object' }
+      ]
     },
     doctorId: {
-      type: 'string',
-      maxLength: 100
+      oneOf: [
+        { type: 'string' },
+        { type: 'object' }
+      ]
     },
     hospitalId: {
-      type: 'string',
-      maxLength: 100
+      oneOf: [
+        { type: 'string' },
+        { type: 'object' }
+      ]
     },
     appointmentDate: {
       type: 'string',
@@ -66,6 +72,6 @@ export const appointmentSchema: RxJsonSchema<AppointmentDocType> = {
       enum: ['synced', 'pending', 'failed']
     }
   },
-  required: ['_id', 'patientId', 'doctorId', 'hospitalId', 'appointmentDate', 'status', 'createdAt', 'updatedAt', 'syncStatus'],
-  indexes: ['patientId', 'doctorId', 'hospitalId', 'appointmentDate', 'status', 'updatedAt']
+  required: ['_id', 'appointmentDate', 'status', 'createdAt', 'updatedAt', 'syncStatus'],
+  indexes: ['appointmentDate', 'status', 'updatedAt']
 };

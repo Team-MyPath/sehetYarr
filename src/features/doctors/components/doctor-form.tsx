@@ -176,23 +176,29 @@ export default function DoctorForm({
         : '/api/doctors';
       const method = initialData ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      // Import offline submission utility
+      const { submitWithOfflineSupport } = await import('@/lib/offline/form-submission');
 
-      const result = await response.json();
+      const result = await submitWithOfflineSupport(
+        'doctors',
+        payload,
+        {
+          apiEndpoint: url,
+          method,
+          id: initialData?._id,
+          onSuccess: () => {
+            router.push('/dashboard/doctors');
+            router.refresh();
+          },
+        }
+      );
 
-      if (result.success) {
-        toast.success(initialData ? 'Doctor updated successfully' : 'Doctor created successfully');
-        router.push('/dashboard/doctors');
-        router.refresh();
-      } else {
-        toast.error(result.message || 'Something went wrong');
+      if (!result.success) {
+        console.error('Doctor submission failed:', result.error);
       }
     } catch (error) {
       toast.error('Failed to save doctor');
+      console.error('Doctor form error:', error);
     }
   }
 

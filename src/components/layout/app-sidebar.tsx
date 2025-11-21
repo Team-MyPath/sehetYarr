@@ -31,7 +31,7 @@ import {
 import { UserAvatarProfile } from '@/components/user-avatar-profile';
 import { navItems } from '@/constants/data';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { useUser } from '@clerk/nextjs';
+import { useOfflineAuth } from '@/hooks/use-offline-auth';
 import {
   IconBell,
   IconChevronRight,
@@ -110,7 +110,7 @@ const tenants = [
 export default function AppSidebar() {
   const pathname = usePathname();
   const { isOpen } = useMediaQuery();
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded } = useOfflineAuth();
   const router = useRouter();
   const handleSwitchTenant = (_tenantId: string) => {
     // Tenant switching functionality would be implemented here

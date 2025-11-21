@@ -145,23 +145,29 @@ export default function MedicalRecordForm({
         : '/api/medical-records';
       const method = initialData ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      // Import offline submission utility
+      const { submitWithOfflineSupport } = await import('@/lib/offline/form-submission');
 
-      const result = await response.json();
+      const result = await submitWithOfflineSupport(
+        'medical_records',
+        payload,
+        {
+          apiEndpoint: url,
+          method,
+          id: initialData?._id,
+          onSuccess: () => {
+            router.push('/dashboard/medical-records');
+            router.refresh();
+          },
+        }
+      );
 
-      if (result.success) {
-        toast.success(initialData ? 'Medical record updated successfully' : 'Medical record created successfully');
-        router.push('/dashboard/medical-records');
-        router.refresh();
-      } else {
-        toast.error(result.message || 'Something went wrong');
+      if (!result.success) {
+        console.error('Medical record submission failed:', result.error);
       }
     } catch (error) {
       toast.error('Failed to save medical record');
+      console.error('Medical record form error:', error);
     }
   }
 

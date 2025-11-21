@@ -128,23 +128,30 @@ export default function AppointmentForm({
         : '/api/appointments';
       const method = initialData ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      // Import offline submission utility dynamically to avoid SSR issues
+      const { submitWithOfflineSupport } = await import('@/lib/offline/form-submission');
 
-      const result = await response.json();
+      const result = await submitWithOfflineSupport(
+        'appointments',
+        payload,
+        {
+          apiEndpoint: url,
+          method,
+          id: initialData?._id,
+          onSuccess: () => {
+            router.push('/dashboard/appointments');
+            router.refresh();
+          },
+        }
+      );
 
-      if (result.success) {
-        toast.success(initialData ? 'Appointment updated successfully' : 'Appointment created successfully');
-        router.push('/dashboard/appointments');
-        router.refresh();
-      } else {
-        toast.error(result.message || 'Something went wrong');
+      if (!result.success) {
+        // Error already shown by utility
+        console.error('Appointment submission failed:', result.error);
       }
     } catch (error) {
       toast.error('Failed to save appointment');
+      console.error('Appointment form error:', error);
     }
   }
 

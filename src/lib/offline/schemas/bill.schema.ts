@@ -33,18 +33,28 @@ export const billSchema: RxJsonSchema<BillDocType> = {
       maxLength: 100
     },
     patientId: {
-      type: 'string',
-      maxLength: 100
+      oneOf: [
+        { type: 'string' },
+        { type: 'object' }
+      ]
     },
     hospitalId: {
-      type: 'string',
-      maxLength: 100
+      oneOf: [
+        { type: 'string' },
+        { type: 'object' }
+      ]
     },
     doctorId: {
-      type: 'string'
+      oneOf: [
+        { type: 'string' },
+        { type: 'object' }
+      ]
     },
     medicalRecordId: {
-      type: 'string'
+      oneOf: [
+        { type: 'string' },
+        { type: 'object' }
+      ]
     },
     billDate: {
       type: 'string',
@@ -94,6 +104,6 @@ export const billSchema: RxJsonSchema<BillDocType> = {
       enum: ['synced', 'pending', 'failed']
     }
   },
-  required: ['_id', 'patientId', 'hospitalId', 'billDate', 'totalAmount', 'paidAmount', 'status', 'paymentMethod', 'createdAt', 'updatedAt', 'syncStatus'],
-  indexes: ['patientId', 'hospitalId', 'status', 'updatedAt']
+  required: ['_id', 'billDate', 'totalAmount', 'paidAmount', 'status', 'paymentMethod', 'createdAt', 'updatedAt', 'syncStatus'],
+  indexes: ['status', 'updatedAt']
 };

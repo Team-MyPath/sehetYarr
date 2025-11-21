@@ -18,12 +18,20 @@ import {
   hospitalSchema,
   billSchema,
   medicalRecordSchema,
+  workerSchema,
+  facilitySchema,
+  capacitySchema,
+  pharmacySchema,
   type PatientDocType,
   type DoctorDocType,
   type AppointmentDocType,
   type HospitalDocType,
   type BillDocType,
   type MedicalRecordDocType,
+  type WorkerDocType,
+  type FacilityDocType,
+  type CapacityDocType,
+  type PharmacyDocType,
 } from "./schemas";
 import { clearRxDatabase, needsMigration } from "./migration";
 
@@ -42,6 +50,10 @@ export type DatabaseCollections = {
   hospitals: RxCollection<HospitalDocType>;
   bills: RxCollection<BillDocType>;
   medical_records: RxCollection<MedicalRecordDocType>;
+  workers: RxCollection<WorkerDocType>;
+  facilities: RxCollection<FacilityDocType>;
+  capacity: RxCollection<CapacityDocType>;
+  pharmacies: RxCollection<PharmacyDocType>;
 };
 
 export type SehetYarrDatabase = RxDatabase<DatabaseCollections>;
@@ -86,7 +98,7 @@ function createConflictHandler<T extends { updatedAt: string }>() {
 async function createDatabase(): Promise<SehetYarrDatabase> {
   console.log("🗄️ Creating RxDB database...");
 
-  const dbName = "sehetyarr_offline_db";
+  const dbName = "sehetyarr_offline_db_v6";
 
   try {
     // Create database with Dexie storage
@@ -134,6 +146,22 @@ async function createDatabase(): Promise<SehetYarrDatabase> {
       medical_records: {
         schema: medicalRecordSchema,
         conflictHandler: createConflictHandler<MedicalRecordDocType>() as any,
+      },
+      workers: {
+        schema: workerSchema,
+        conflictHandler: createConflictHandler<WorkerDocType>() as any,
+      },
+      facilities: {
+        schema: facilitySchema,
+        conflictHandler: createConflictHandler<FacilityDocType>() as any,
+      },
+      capacity: {
+        schema: capacitySchema,
+        conflictHandler: createConflictHandler<CapacityDocType>() as any,
+      },
+      pharmacies: {
+        schema: pharmacySchema,
+        conflictHandler: createConflictHandler<PharmacyDocType>() as any,
       },
     });
 

@@ -217,7 +217,11 @@ export async function setupReplication(
     'appointments',
     'hospitals',
     'bills',
-    'medical_records'
+    'medical_records',
+    'workers',
+    'facilities',
+    'capacity',
+    'pharmacies'
   ];
 
   for (const collectionName of collections) {

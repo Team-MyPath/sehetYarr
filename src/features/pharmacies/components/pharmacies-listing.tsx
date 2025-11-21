@@ -3,57 +3,51 @@
 import { columns } from './pharmacies-tables/columns';
 import { PharmacyTable } from './pharmacies-tables';
 import { Pharmacy } from '@/types/pharmacy';
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { useQueryState, parseAsInteger } from 'nuqs';
 import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
+import { useOfflineData } from '@/hooks/use-offline-data';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { WifiOff } from 'lucide-react';
 
 export default function PharmaciesListingPage() {
-  const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
-  const [totalItems, setTotalItems] = useState(0);
-  const [loading, setLoading] = useState(true);
-
   const [page] = useQueryState('page', parseAsInteger.withDefault(1));
   const [perPage] = useQueryState('perPage', parseAsInteger.withDefault(10));
   const [search] = useQueryState('name');
 
-  useEffect(() => {
-    const fetchPharmacies = async () => {
-      setLoading(true);
-      try {
-        const params = new URLSearchParams({
-          page: page.toString(),
-          limit: perPage.toString(),
-          ...(search && { search })
-        });
-
-        const response = await fetch(`/api/pharmacies?${params}`);
-        const data = await response.json();
-
-        if (data.success) {
-          setPharmacies(data.data || []);
-          setTotalItems(data.pagination?.total || 0);
-        }
-      } catch (error) {
-        console.error('Failed to fetch pharmacies:', error);
-        setPharmacies([]);
-        setTotalItems(0);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPharmacies();
+  const apiEndpoint = useMemo(() => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: perPage.toString(),
+      ...(search && { search })
+    });
+    return `/api/pharmacies?${params}`;
   }, [page, perPage, search]);
+
+  const { data: pharmacies, totalItems, loading, isFromCache } = useOfflineData<Pharmacy>({
+    collection: 'pharmacies',
+    apiEndpoint,
+  });
 
   if (loading) {
     return <DataTableSkeleton columnCount={6} rowCount={10} filterCount={1} />;
   }
 
   return (
-    <PharmacyTable
-      data={pharmacies}
-      totalItems={totalItems}
-      columns={columns}
-    />
+    <>
+      {isFromCache && (
+        <Alert className="mb-4 border-amber-500 bg-amber-50 dark:bg-amber-950">
+          <WifiOff className="h-4 w-4" />
+          <AlertDescription>
+            You're offline. Showing cached data. Changes will sync when you're back online.
+          </AlertDescription>
+        </Alert>
+      )}
+      <PharmacyTable
+        data={pharmacies}
+        totalItems={totalItems}
+        columns={columns}
+      />
+    </>
   );
 }

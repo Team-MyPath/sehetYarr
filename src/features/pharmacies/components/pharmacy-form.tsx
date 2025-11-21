@@ -12,6 +12,8 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
+import { useEffect, useState } from 'react';
+import { submitWithOfflineSupport } from '@/lib/offline/form-submission';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -71,21 +73,22 @@ export default function PharmacyForm({
         : '/api/pharmacies';
       const method = initialData ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        toast.success(initialData ? 'Pharmacy updated successfully' : 'Pharmacy created successfully');
-        router.push('/dashboard/pharmacies');
-        router.refresh();
-      } else {
-        toast.error(result.message || 'Something went wrong');
-      }
+      await submitWithOfflineSupport(
+        'pharmacies',
+        payload,
+        {
+          apiEndpoint: url,
+          method,
+          id: initialData?._id,
+          onSuccess: (result) => {
+            router.push('/dashboard/pharmacies');
+            router.refresh();
+          },
+          onError: (error) => {
+            console.error(error);
+          }
+        }
+      );
     } catch (error) {
       toast.error('Failed to save pharmacy');
     }

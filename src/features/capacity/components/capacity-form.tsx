@@ -13,6 +13,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
 import { useEffect, useState } from 'react';
+import { submitWithOfflineSupport } from '@/lib/offline/form-submission';
 
 const wardTypeOptions = [
   { label: 'VIP', value: 'VIP' },
@@ -99,21 +100,22 @@ export default function CapacityForm({
         : '/api/capacity';
       const method = initialData ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        toast.success(initialData ? 'Capacity updated successfully' : 'Capacity created successfully');
-        router.push('/dashboard/capacity');
-        router.refresh();
-      } else {
-        toast.error(result.message || 'Something went wrong');
-      }
+      await submitWithOfflineSupport(
+        'capacity',
+        payload,
+        {
+          apiEndpoint: url,
+          method,
+          id: initialData?._id,
+          onSuccess: (result) => {
+            router.push('/dashboard/capacity');
+            router.refresh();
+          },
+          onError: (error) => {
+            console.error(error);
+          }
+        }
+      );
     } catch (error) {
       toast.error('Failed to save capacity');
     }

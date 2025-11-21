@@ -173,23 +173,29 @@ export default function BillForm({
         : '/api/bills';
       const method = initialData ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      // Import offline submission utility
+      const { submitWithOfflineSupport } = await import('@/lib/offline/form-submission');
 
-      const result = await response.json();
+      const result = await submitWithOfflineSupport(
+        'bills',
+        payload,
+        {
+          apiEndpoint: url,
+          method,
+          id: initialData?._id,
+          onSuccess: () => {
+            router.push('/dashboard/bills');
+            router.refresh();
+          },
+        }
+      );
 
-      if (result.success) {
-        toast.success(initialData ? 'Bill updated successfully' : 'Bill created successfully');
-        router.push('/dashboard/bills');
-        router.refresh();
-      } else {
-        toast.error(result.message || 'Something went wrong');
+      if (!result.success) {
+        console.error('Bill submission failed:', result.error);
       }
     } catch (error) {
       toast.error('Failed to save bill');
+      console.error('Bill form error:', error);
     }
   }
 

@@ -84,29 +84,29 @@ export default function HospitalForm({
         : '/api/hospitals';
       const method = initialData ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
+      // Import offline submission utility
+      const { submitWithOfflineSupport } = await import('@/lib/offline/form-submission');
 
-      const result = await response.json();
+      const result = await submitWithOfflineSupport(
+        'hospitals',
+        payload,
+        {
+          apiEndpoint: url,
+          method,
+          id: initialData?._id,
+          onSuccess: () => {
+            router.push('/dashboard/hospitals');
+            router.refresh();
+          },
+        }
+      );
 
-      if (result.success) {
-        toast.success(
-          initialData
-            ? 'Hospital updated successfully'
-            : 'Hospital created successfully'
-        );
-        router.push('/dashboard/hospitals');
-        router.refresh();
-      } else {
-        toast.error(result.message || 'Something went wrong');
+      if (!result.success) {
+        console.error('Hospital submission failed:', result.error);
       }
     } catch (error) {
       toast.error('Failed to save hospital');
+      console.error('Hospital form error:', error);
     }
   }
 

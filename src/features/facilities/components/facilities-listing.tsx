@@ -3,18 +3,17 @@
 import { columns } from './facilities-tables/columns';
 import { FacilityTable } from './facilities-tables';
 import { Facility } from '@/types/facility';
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { useQueryState, parseAsInteger, parseAsArrayOf, parseAsStringEnum } from 'nuqs';
 import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
+import { useOfflineData } from '@/hooks/use-offline-data';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { WifiOff } from 'lucide-react';
 
 const categoryEnum = ['Equipment', 'Medication', 'Facility'];
 const statusEnum = ['Operational', 'Out of Service', 'Under Maintenance'];
 
 export default function FacilitiesListingPage() {
-  const [facilities, setFacilities] = useState<Facility[]>([]);
-  const [totalItems, setTotalItems] = useState(0);
-  const [loading, setLoading] = useState(true);
-
   const [page] = useQueryState('page', parseAsInteger.withDefault(1));
   const [perPage] = useQueryState('perPage', parseAsInteger.withDefault(10));
   const [search] = useQueryState('search');
@@ -24,46 +23,41 @@ export default function FacilitiesListingPage() {
   const categoryStr = category.join(',');
   const statusStr = status.join(',');
 
-  useEffect(() => {
-    const fetchFacilities = async () => {
-      setLoading(true);
-      try {
-        const params = new URLSearchParams({
-          page: page.toString(),
-          limit: perPage.toString(),
-          ...(search && { search }),
-          ...(categoryStr && { category: categoryStr }),
-          ...(statusStr && { status: statusStr })
-        });
-
-        const response = await fetch(`/api/facilities?${params}`);
-        const data = await response.json();
-
-        if (data.success) {
-          setFacilities(data.data || []);
-          setTotalItems(data.pagination?.total || 0);
-        }
-      } catch (error) {
-        console.error('Failed to fetch facilities:', error);
-        setFacilities([]);
-        setTotalItems(0);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFacilities();
+  const apiEndpoint = useMemo(() => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: perPage.toString(),
+      ...(search && { search }),
+      ...(categoryStr && { category: categoryStr }),
+      ...(statusStr && { status: statusStr })
+    });
+    return `/api/facilities?${params}`;
   }, [page, perPage, search, categoryStr, statusStr]);
+
+  const { data: facilities, totalItems, loading, isFromCache } = useOfflineData<Facility>({
+    collection: 'facilities',
+    apiEndpoint,
+  });
 
   if (loading) {
     return <DataTableSkeleton columnCount={7} rowCount={10} filterCount={2} />;
   }
 
   return (
-    <FacilityTable
-      data={facilities}
-      totalItems={totalItems}
-      columns={columns}
-    />
+    <>
+      {isFromCache && (
+        <Alert className="mb-4 border-amber-500 bg-amber-50 dark:bg-amber-950">
+          <WifiOff className="h-4 w-4" />
+          <AlertDescription>
+            You're offline. Showing cached data. Changes will sync when you're back online.
+          </AlertDescription>
+        </Alert>
+      )}
+      <FacilityTable
+        data={facilities}
+        totalItems={totalItems}
+        columns={columns}
+      />
+    </>
   );
 }

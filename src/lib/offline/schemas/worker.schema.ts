@@ -1,39 +1,44 @@
 import type { RxJsonSchema } from 'rxdb';
 
-export type DoctorDocType = {
+export type WorkerDocType = {
   _id: string;
   name: string;
-  userId: string;
   gender?: 'male' | 'female' | 'other';
   dateOfBirth?: string;
   cnic: string;
   cnicIV: string;
-  specialization?: string;
+  designation: string;
+  department?: string;
   experienceYears?: number;
-  subSpecialization?: string[];
   qualifications?: string[];
-  licenseNumber: string;
+  shift?: {
+    type?: string;
+    startTime?: string;
+    endTime?: string;
+  };
   contact?: {
+    primaryNumber?: string;
+    secondaryNumber?: string;
     area?: string;
     city?: string;
     state?: string;
-    primaryNumber?: string;
-    secondaryNumber?: string;
   };
-  hospitalIds?: string[];
-  availability?: {
-    days?: string[];
-    timeSlots?: Array<{
-      start: string;
-      end: string;
-    }>;
-  };
+  hospitalIds?: Array<string | { _id: string; name: string }>;
+  licenseNumber?: string;
+  schemes?: Array<{
+    name?: string;
+    organization?: string;
+    role?: string;
+    startDate?: string;
+    endDate?: string;
+    remarks?: string;
+  }>;
   createdAt: string;
   updatedAt: string;
   syncStatus: 'synced' | 'pending' | 'failed';
 };
 
-export const doctorSchema: RxJsonSchema<DoctorDocType> = {
+export const workerSchema: RxJsonSchema<WorkerDocType> = {
   version: 0,
   primaryKey: '_id',
   type: 'object',
@@ -45,10 +50,6 @@ export const doctorSchema: RxJsonSchema<DoctorDocType> = {
     name: {
       type: 'string',
       maxLength: 200
-    },
-    userId: {
-      type: 'string',
-      maxLength: 100
     },
     gender: {
       type: 'string',
@@ -66,36 +67,36 @@ export const doctorSchema: RxJsonSchema<DoctorDocType> = {
       type: 'string',
       maxLength: 100
     },
-    specialization: {
+    designation: {
       type: 'string',
-      maxLength: 200
+      maxLength: 50
+    },
+    department: {
+      type: 'string'
     },
     experienceYears: {
       type: 'number'
     },
-    subSpecialization: {
-      type: 'array',
-      items: {
-        type: 'string'
-      }
-    },
     qualifications: {
       type: 'array',
-      items: {
-        type: 'string'
-      }
+      items: { type: 'string' }
     },
-    licenseNumber: {
-      type: 'string'
+    shift: {
+      type: 'object',
+      properties: {
+        type: { type: 'string' },
+        startTime: { type: 'string' },
+        endTime: { type: 'string' }
+      }
     },
     contact: {
       type: 'object',
       properties: {
+        primaryNumber: { type: 'string' },
+        secondaryNumber: { type: 'string' },
         area: { type: 'string' },
         city: { type: 'string' },
-        state: { type: 'string' },
-        primaryNumber: { type: 'string' },
-        secondaryNumber: { type: 'string' }
+        state: { type: 'string' }
       }
     },
     hospitalIds: {
@@ -107,22 +108,20 @@ export const doctorSchema: RxJsonSchema<DoctorDocType> = {
         ]
       }
     },
-    availability: {
-      type: 'object',
-      properties: {
-        days: {
-          type: 'array',
-          items: { type: 'string' }
-        },
-        timeSlots: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              start: { type: 'string' },
-              end: { type: 'string' }
-            }
-          }
+    licenseNumber: {
+      type: 'string'
+    },
+    schemes: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          organization: { type: 'string' },
+          role: { type: 'string' },
+          startDate: { type: 'string', format: 'date-time' },
+          endDate: { type: 'string', format: 'date-time' },
+          remarks: { type: 'string' }
         }
       }
     },
@@ -140,6 +139,7 @@ export const doctorSchema: RxJsonSchema<DoctorDocType> = {
       enum: ['synced', 'pending', 'failed']
     }
   },
-  required: ['_id', 'name', 'userId', 'cnic', 'cnicIV', 'licenseNumber', 'createdAt', 'updatedAt', 'syncStatus'],
-  indexes: ['cnic', 'name', 'updatedAt']
+  required: ['_id', 'name', 'cnic', 'cnicIV', 'designation', 'createdAt', 'updatedAt', 'syncStatus'],
+  indexes: ['name', 'cnic', 'designation', 'updatedAt']
 };
+

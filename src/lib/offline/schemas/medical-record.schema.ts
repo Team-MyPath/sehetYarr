@@ -45,16 +45,22 @@ export const medicalRecordSchema: RxJsonSchema<MedicalRecordDocType> = {
       maxLength: 100
     },
     patientId: {
-      type: 'string',
-      maxLength: 100
+      oneOf: [
+        { type: 'string' },
+        { type: 'object' }
+      ]
     },
     doctorId: {
-      type: 'string',
-      maxLength: 100
+      oneOf: [
+        { type: 'string' },
+        { type: 'object' }
+      ]
     },
     hospitalId: {
-      type: 'string',
-      maxLength: 100
+      oneOf: [
+        { type: 'string' },
+        { type: 'object' }
+      ]
     },
     visitDate: {
       type: 'string',
@@ -136,6 +142,6 @@ export const medicalRecordSchema: RxJsonSchema<MedicalRecordDocType> = {
       enum: ['synced', 'pending', 'failed']
     }
   },
-  required: ['_id', 'patientId', 'doctorId', 'hospitalId', 'createdAt', 'updatedAt', 'syncStatus'],
-  indexes: ['patientId', 'doctorId', 'hospitalId', 'updatedAt']
+  required: ['_id', 'createdAt', 'updatedAt', 'syncStatus'],
+  indexes: ['updatedAt']
 };

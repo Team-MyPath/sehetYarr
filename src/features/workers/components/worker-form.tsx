@@ -14,6 +14,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
 import { useEffect, useState } from 'react';
+import { submitWithOfflineSupport } from '@/lib/offline/form-submission';
 
 const genderOptions = [
   { label: 'Male', value: 'Male' },
@@ -171,21 +172,23 @@ export default function WorkerForm({
         : '/api/workers';
       const method = initialData ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        toast.success(initialData ? 'Worker updated successfully' : 'Worker created successfully');
-        router.push('/dashboard/workers');
-        router.refresh();
-      } else {
-        toast.error(result.message || 'Something went wrong');
-      }
+      await submitWithOfflineSupport(
+        'workers',
+        payload,
+        {
+          apiEndpoint: url,
+          method,
+          id: initialData?._id,
+          onSuccess: (result) => {
+            router.push('/dashboard/workers');
+            router.refresh();
+          },
+          onError: (error) => {
+            // Error is already toasted by submitWithOfflineSupport
+            console.error(error);
+          }
+        }
+      );
     } catch (error) {
       toast.error('Failed to save worker');
     }

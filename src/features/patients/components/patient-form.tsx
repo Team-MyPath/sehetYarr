@@ -144,23 +144,29 @@ export default function PatientForm({
         : '/api/patients';
       const method = initialData ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      // Import offline submission utility
+      const { submitWithOfflineSupport } = await import('@/lib/offline/form-submission');
 
-      const result = await response.json();
+      const result = await submitWithOfflineSupport(
+        'patients',
+        payload,
+        {
+          apiEndpoint: url,
+          method,
+          id: initialData?._id,
+          onSuccess: () => {
+            router.push('/dashboard/patients');
+            router.refresh();
+          },
+        }
+      );
 
-      if (result.success) {
-        toast.success(result.message || (initialData ? 'Patient updated successfully' : 'Patient created successfully'));
-        router.push('/dashboard/patients');
-        router.refresh();
-      } else {
-        toast.error(result.message || 'Something went wrong');
+      if (!result.success) {
+        console.error('Patient submission failed:', result.error);
       }
     } catch (error) {
       toast.error('Failed to save patient');
+      console.error('Patient form error:', error);
     }
   }
 
