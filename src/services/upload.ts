@@ -32,3 +32,4 @@ export async function uploadFiles(files: File[]): Promise<string[]> {
   return Promise.all(uploadPromises);
 }
 
+
