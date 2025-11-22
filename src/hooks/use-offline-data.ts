@@ -79,8 +79,22 @@ export function useOfflineData<T = any>(options: UseOfflineDataOptions) {
                     // Remove Mongoose version key and internal fields
                     const { __v, ...cleanItem } = item;
                     
+                    // Collection-specific data cleaning
+                    let processedItem = { ...cleanItem };
+                    
+                    if (collection === 'patients') {
+                      // Remove cnicIV for patients (removed from schema)
+                      const { cnicIV, ...patientItem } = processedItem;
+                      processedItem = patientItem;
+                    } else if (collection === 'doctors' || collection === 'workers') {
+                      // Ensure cnicIV exists for doctors/workers (required in schema)
+                      if (!processedItem.cnicIV) {
+                        processedItem.cnicIV = processedItem.cnic?.split('-')[0] || '';
+                      }
+                    }
+                    
                     return rxCollection.upsert({
-                      ...cleanItem,
+                      ...processedItem,
                       _id: item._id || item.id,
                       updatedAt: item.updatedAt || new Date().toISOString(),
                       syncStatus: 'synced', // Mark as synced from server
@@ -88,7 +102,7 @@ export function useOfflineData<T = any>(options: UseOfflineDataOptions) {
                       successCount++;
                     }).catch((err: any) => {
                       console.warn('[OfflineData] Failed to cache item:', err);
-                      // console.warn('[OfflineData] Item data:', cleanItem);
+                      // console.warn('[OfflineData] Item data:', processedItem);
                     });
                   })
                 );
@@ -200,8 +214,22 @@ export async function getOfflineItem<T = any>(
           const rxCollection = db[collection];
           
           if (rxCollection) {
+            let processedData = { ...result.data };
+            
+            // Collection-specific data cleaning
+            if (collection === 'patients') {
+              // Remove cnicIV for patients (removed from schema)
+              const { cnicIV, ...patientData } = processedData;
+              processedData = patientData;
+            } else if (collection === 'doctors' || collection === 'workers') {
+              // Ensure cnicIV exists for doctors/workers (required in schema)
+              if (!processedData.cnicIV) {
+                processedData.cnicIV = processedData.cnic?.split('-')[0] || '';
+              }
+            }
+            
             await rxCollection.upsert({
-              ...result.data,
+              ...processedData,
               _id: result.data._id || id,
               updatedAt: result.data.updatedAt || new Date().toISOString(),
               syncStatus: 'synced', // Mark as synced from server

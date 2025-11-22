@@ -140,16 +140,20 @@ self.addEventListener('fetch', (event) => {
           // Return cached page immediately
           console.log('[ServiceWorker] ✅ Serving from cache:', url.pathname);
           
-          // Update cache in background
-          fetch(request)
-            .then((networkResponse) => {
-              caches.open(RUNTIME_CACHE).then((cache) => {
-                cache.put(request, networkResponse);
+          // Update cache in background (only if online)
+          if (navigator.onLine) {
+            fetch(request)
+              .then((networkResponse) => {
+                if (networkResponse.ok && !networkResponse.redirected) {
+                  caches.open(RUNTIME_CACHE).then((cache) => {
+                    cache.put(request, networkResponse);
+                  });
+                }
+              })
+              .catch(() => {
+                console.log('[ServiceWorker] Background update failed (offline)');
               });
-            })
-            .catch(() => {
-              console.log('[ServiceWorker] Background update failed (offline)');
-            });
+          }
           
           return cachedResponse;
         }
@@ -169,20 +173,31 @@ self.addEventListener('fetch', (event) => {
             }
             
             // Cache successful responses
-            const responseToCache = networkResponse.clone();
-            caches.open(RUNTIME_CACHE).then((cache) => {
-              cache.put(request, responseToCache);
-              console.log('[ServiceWorker] 📦 Cached new page:', url.pathname);
-            });
+            if (networkResponse.ok) {
+              const responseToCache = networkResponse.clone();
+              caches.open(RUNTIME_CACHE).then((cache) => {
+                cache.put(request, responseToCache);
+                console.log('[ServiceWorker] 📦 Cached new page:', url.pathname);
+              });
+            }
             return networkResponse;
           })
           .catch((error) => {
             console.log('[ServiceWorker] ❌ Navigation failed:', error);
-            // Fallback to offline page
-            return caches.match('/offline').then((offlinePage) => {
-              return offlinePage || new Response('Offline - Page not cached', {
-                status: 503,
-                statusText: 'Service Unavailable',
+            // Try to match with a normalized URL (without query params)
+            const normalizedUrl = new URL(request.url);
+            normalizedUrl.search = '';
+            return caches.match(normalizedUrl).then((cachedResponse) => {
+              if (cachedResponse) {
+                console.log('[ServiceWorker] ✅ Serving from cache (normalized):', normalizedUrl.pathname);
+                return cachedResponse;
+              }
+              // Fallback to offline page
+              return caches.match('/offline').then((offlinePage) => {
+                return offlinePage || new Response('Offline - Page not cached', {
+                  status: 503,
+                  statusText: 'Service Unavailable',
+                });
               });
             });
           });

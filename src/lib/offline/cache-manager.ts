@@ -197,8 +197,22 @@ export class CacheManager {
 
       // Batch insert/upsert documents
       for (const doc of documents) {
+        let processedDoc = { ...doc };
+        
+        // Collection-specific data cleaning
+        if (collectionName === 'patients') {
+          // Remove cnicIV for patients (removed from schema)
+          const { cnicIV, ...patientDoc } = processedDoc;
+          processedDoc = patientDoc;
+        } else if (collectionName === 'doctors' || collectionName === 'workers') {
+          // Ensure cnicIV exists for doctors/workers (required in schema)
+          if (!processedDoc.cnicIV) {
+            processedDoc.cnicIV = processedDoc.cnic?.split('-')[0] || '';
+          }
+        }
+        
         const transformedDoc = {
-          ...doc,
+          ...processedDoc,
           _id: doc._id.toString(),
           syncStatus: 'synced' as const,
           createdAt: doc.createdAt || new Date().toISOString(),

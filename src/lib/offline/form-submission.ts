@@ -59,8 +59,22 @@ export async function submitWithOfflineSupport(
           const rxCollection = db[collection];
           
           if (rxCollection) {
+            let processedData = { ...result.data };
+            
+            // Collection-specific data cleaning
+            if (collection === 'patients') {
+              // Remove cnicIV for patients (removed from schema)
+              const { cnicIV, ...patientData } = processedData;
+              processedData = patientData;
+            } else if (collection === 'doctors' || collection === 'workers') {
+              // Ensure cnicIV exists for doctors/workers (required in schema)
+              if (!processedData.cnicIV) {
+                processedData.cnicIV = processedData.cnic?.split('-')[0] || '';
+              }
+            }
+            
             const docData = {
-              ...result.data,
+              ...processedData,
               _id: result.data._id || result.data.id,
               updatedAt: result.data.updatedAt || new Date().toISOString(),
               syncStatus: 'synced' as const, // Mark as synced from server
@@ -126,8 +140,22 @@ export async function submitWithOfflineSupport(
 
       // Prepare document for RxDB
       const docId = id || `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      let processedData = { ...data };
+      
+      // Collection-specific data cleaning
+      if (collection === 'patients') {
+        // Remove cnicIV for patients (removed from schema)
+        const { cnicIV, ...patientData } = processedData;
+        processedData = patientData;
+      } else if (collection === 'doctors' || collection === 'workers') {
+        // Ensure cnicIV exists for doctors/workers (required in schema)
+        if (!processedData.cnicIV) {
+          processedData.cnicIV = processedData.cnic?.split('-')[0] || '';
+        }
+      }
+      
       const docData = {
-        ...data,
+        ...processedData,
         _id: docId,
         updatedAt: new Date().toISOString(),
         syncStatus: 'pending' as const, // Mark as pending sync

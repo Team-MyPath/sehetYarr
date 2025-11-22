@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/connect';
 import { BillModel } from '@/lib/models/bill.model';
+import { PatientModel } from '@/lib/models/patient.model';
+import { HospitalModel } from '@/lib/models/hospital.model';
+import { DoctorModel } from '@/lib/models/doctor.model';
+import { MedicalRecordModel } from '@/lib/models/medical-record.model';
 import { BillStatus, PaymentMethod } from '@/lib/enums';
 import { logger } from '@/lib/utils/logger';
 import { isValidObjectId } from 'mongoose';
+
+// Ensure all models are registered by importing them
+// This is necessary for Mongoose populate to work in Next.js
+import '@/lib/models';
 
 // GET - Get bill by ID
 export async function GET(
@@ -20,6 +28,12 @@ export async function GET(
         { status: 400 }
       );
     }
+
+    // Ensure all referenced models are registered before populate
+    void HospitalModel;
+    void DoctorModel;
+    void MedicalRecordModel;
+    void PatientModel;
 
     const bill = await BillModel.findById(id)
       .populate('patientId', 'name cnic contact')
@@ -98,6 +112,12 @@ export async function PUT(
         { status: 400 }
       );
     }
+
+    // Ensure all referenced models are registered before populate
+    void HospitalModel;
+    void DoctorModel;
+    void MedicalRecordModel;
+    void PatientModel;
 
     const bill = await BillModel.findByIdAndUpdate(id, body, {
       new: true,

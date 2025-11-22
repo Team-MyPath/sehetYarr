@@ -3,10 +3,17 @@ import { connectDB } from '@/lib/db/connect';
 import { BillModel } from '@/lib/models/bill.model';
 import { UserModel, UserRole } from '@/lib/models/user.model';
 import { PatientModel } from '@/lib/models/patient.model';
+import { HospitalModel } from '@/lib/models/hospital.model';
+import { DoctorModel } from '@/lib/models/doctor.model';
+import { MedicalRecordModel } from '@/lib/models/medical-record.model';
 import { BillStatus, PaymentMethod } from '@/lib/enums';
 import { logger } from '@/lib/utils/logger';
 import { isValidObjectId } from 'mongoose';
 import { auth } from '@clerk/nextjs/server';
+
+// Ensure all models are registered by importing them
+// This is necessary for Mongoose populate to work in Next.js
+import '@/lib/models';
 
 // GET - Get all bills or search
 export async function GET(req: NextRequest) {
@@ -74,6 +81,13 @@ export async function GET(req: NextRequest) {
     if (status && Object.values(BillStatus).includes(status as BillStatus)) {
       query.status = status;
     }
+
+    // Ensure all referenced models are registered before populate
+    // This is needed in Next.js to ensure models are available for populate
+    void HospitalModel;
+    void DoctorModel;
+    void MedicalRecordModel;
+    void PatientModel;
 
     const bills = await BillModel.find(query)
       .populate('patientId', 'name cnic contact')
