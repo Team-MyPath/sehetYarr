@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function Page() {
   return (
     <PageContainer scrollable={true}>
-      <div className="space-y-4">
+      <div className="w-full space-y-4">
         <Suspense fallback={<div>Loading...</div>}>
           <PharmacyViewPage pharmacyId="new" />
         </Suspense>

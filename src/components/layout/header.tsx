@@ -7,6 +7,7 @@ import { UserNav } from './user-nav';
 import { ThemeSelector } from '../theme-selector';
 import { ModeToggle } from './ThemeToggle/theme-toggle';
 import { OfflineIndicator } from './offline-indicator';
+import { LanguageSelector } from '../language-selector';
 
 export default function Header() {
   return (
@@ -21,6 +22,7 @@ export default function Header() {
         <div className='hidden md:flex'>
           <SearchInput />
         </div>
+        <LanguageSelector />
         <OfflineIndicator />
         <UserNav />
         <ModeToggle />

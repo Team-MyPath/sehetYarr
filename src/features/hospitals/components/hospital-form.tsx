@@ -11,6 +11,8 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
+import { useI18n } from '@/providers/i18n-provider';
+import { submitWithOfflineSupport } from '@/lib/offline/form-submission';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -37,6 +39,7 @@ export default function HospitalForm({
   initialData: Hospital | null;
   pageTitle: string;
 }) {
+  const { t } = useI18n();
   const defaultValues = {
     name: initialData?.name || '',
     registrationNumber: initialData?.registrationNumber || '',
@@ -84,9 +87,6 @@ export default function HospitalForm({
         : '/api/hospitals';
       const method = initialData ? 'PUT' : 'POST';
 
-      // Import offline submission utility
-      const { submitWithOfflineSupport } = await import('@/lib/offline/form-submission');
-
       const result = await submitWithOfflineSupport(
         'hospitals',
         payload,
@@ -114,7 +114,7 @@ export default function HospitalForm({
     <Card className='mx-auto w-full'>
       <CardHeader>
         <CardTitle className='text-left text-2xl font-bold'>
-          {pageTitle}
+          {initialData ? t('common.edit') : t('common.create_new')} {t('common.hospitals')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -127,15 +127,15 @@ export default function HospitalForm({
             <FormInput
               control={form.control}
               name='name'
-              label='Hospital Name'
-              placeholder='Enter hospital name'
+              label={t('common.hospital_name')}
+              placeholder={t('common.hospital_name')}
               required
             />
 
             <FormInput
               control={form.control}
               name='registrationNumber'
-              label='Registration Number'
+              label='Registration Number' // Need key
               placeholder='Enter registration number'
               required
             />
@@ -143,8 +143,8 @@ export default function HospitalForm({
             <FormSelect
               control={form.control}
               name='type'
-              label='Hospital Type'
-              placeholder='Select type'
+              label={t('common.hospital_type')}
+              placeholder={t('common.select_type')}
               required
               options={[
                 { label: 'Hospital', value: 'hospital' },
@@ -158,7 +158,7 @@ export default function HospitalForm({
             <FormSelect
               control={form.control}
               name='ownershipType'
-              label='Ownership Type'
+              label='Ownership Type' // Need key
               placeholder='Select ownership type'
               required
               options={[
@@ -171,34 +171,34 @@ export default function HospitalForm({
           </div>
 
           <div className='space-y-4'>
-            <h3 className='text-lg font-semibold'>Location Details</h3>
+            <h3 className='text-lg font-semibold'>{t('common.location')}</h3>
             <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
               <FormInput
                 control={form.control}
                 name='location.area'
-                label='Area'
+                label='Area' // Need key
                 placeholder='Enter area'
               />
 
               <FormInput
                 control={form.control}
                 name='location.city'
-                label='City'
-                placeholder='Enter city'
+                label={t('common.city')}
+                placeholder={t('common.city')}
               />
 
               <FormInput
                 control={form.control}
                 name='location.country'
-                label='Country'
-                placeholder='Enter country'
+                label={t('common.country')}
+                placeholder={t('common.country')}
               />
 
               <div className='grid grid-cols-2 gap-4'>
                 <FormInput
                   control={form.control}
                   name='location.latitude'
-                  label='Latitude'
+                  label='Latitude' // Need key
                   placeholder='Latitude'
                   type='number'
                   step='any'
@@ -207,7 +207,7 @@ export default function HospitalForm({
                 <FormInput
                   control={form.control}
                   name='location.longitude'
-                  label='Longitude'
+                  label='Longitude' // Need key
                   placeholder='Longitude'
                   type='number'
                   step='any'
@@ -217,30 +217,30 @@ export default function HospitalForm({
           </div>
 
           <div className='space-y-4'>
-            <h3 className='text-lg font-semibold'>Contact Information</h3>
+            <h3 className='text-lg font-semibold'>{t('common.contact_info')}</h3>
             <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
               <FormInput
                 control={form.control}
                 name='contact.primaryNumber'
-                label='Primary Contact Number'
-                placeholder='Enter primary number'
+                label={t('common.primary_number')}
+                placeholder={t('common.phone')}
               />
 
               <FormInput
                 control={form.control}
                 name='contact.secondaryNumber'
-                label='Secondary Contact Number'
-                placeholder='Enter secondary number'
+                label={t('common.secondary_number')}
+                placeholder={t('common.phone')}
               />
             </div>
           </div>
 
           <Button type='submit' disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting
-              ? 'Saving...'
+              ? t('common.saving')
               : initialData
-                ? 'Update Hospital'
-                : 'Create Hospital'}
+                ? t('common.update')
+                : t('common.create')}
           </Button>
         </Form>
       </CardContent>

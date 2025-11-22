@@ -7,10 +7,10 @@ import { CellAction } from './cell-action';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 
-export const columns: ColumnDef<MedicalRecord>[] = [
+export const getColumns = (t: any): ColumnDef<MedicalRecord>[] => [
   {
     accessorKey: 'patientId',
-    header: 'Patient',
+    header: t('common.patient_name'),
     cell: ({ row }) => {
       const patient = row.getValue('patientId') as MedicalRecord['patientId'];
       return (
@@ -22,7 +22,7 @@ export const columns: ColumnDef<MedicalRecord>[] = [
   },
   {
     accessorKey: 'doctorId',
-    header: 'Doctor',
+    header: t('common.doctor_name'),
     cell: ({ row }) => {
       const doctor = row.getValue('doctorId') as MedicalRecord['doctorId'];
       return (
@@ -34,7 +34,7 @@ export const columns: ColumnDef<MedicalRecord>[] = [
   },
   {
     accessorKey: 'hospitalId',
-    header: 'Hospital',
+    header: t('common.hospital_name'),
     cell: ({ row }) => {
       const hospital = row.getValue('hospitalId') as MedicalRecord['hospitalId'];
       return (
@@ -47,7 +47,7 @@ export const columns: ColumnDef<MedicalRecord>[] = [
   {
     accessorKey: 'visitDate',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Visit Date' />
+      <DataTableColumnHeader column={column} title={t('common.record_date') || 'Visit Date'} />
     ),
     cell: ({ row }) => {
       const date = row.getValue('visitDate') as string;
@@ -62,7 +62,7 @@ export const columns: ColumnDef<MedicalRecord>[] = [
   },
   {
     accessorKey: 'diagnosis',
-    header: 'Diagnosis',
+    header: t('common.diagnosis'),
     cell: ({ row }) => {
       const diagnosis = row.getValue('diagnosis') as string;
       return (
@@ -74,12 +74,12 @@ export const columns: ColumnDef<MedicalRecord>[] = [
   },
   {
     accessorKey: 'prescriptions',
-    header: 'Prescriptions',
+    header: t('common.prescription'),
     cell: ({ row }) => {
       const prescriptions = row.getValue('prescriptions') as MedicalRecord['prescriptions'];
       const count = prescriptions?.length || 0;
       return count > 0 ? (
-        <Badge variant='outline'>{count} item{count !== 1 ? 's' : ''}</Badge>
+        <Badge variant='outline'>{count} {t('common.items') || 'items'}</Badge>
       ) : (
         <span className='text-muted-foreground'>-</span>
       );
@@ -87,12 +87,12 @@ export const columns: ColumnDef<MedicalRecord>[] = [
   },
   {
     accessorKey: 'testsOrdered',
-    header: 'Tests',
+    header: 'Tests', // Need key
     cell: ({ row }) => {
       const tests = row.getValue('testsOrdered') as MedicalRecord['testsOrdered'];
       const count = tests?.length || 0;
       return count > 0 ? (
-        <Badge variant='outline'>{count} test{count !== 1 ? 's' : ''}</Badge>
+        <Badge variant='outline'>{count} {t('common.items') || 'tests'}</Badge>
       ) : (
         <span className='text-muted-foreground'>-</span>
       );

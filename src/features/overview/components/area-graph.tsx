@@ -17,6 +17,7 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from '@/components/ui/chart';
+import { useI18n } from '@/providers/i18n-provider';
 
 interface AreaGraphProps {
   data?: Array<{ month: string; scheduled: number; completed: number }>;
@@ -38,6 +39,7 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function AreaGraph({ data = [], role = 'guest' }: AreaGraphProps) {
+  const { t } = useI18n();
   const chartData = data.length > 0 ? data : [];
   const totalScheduled = chartData.reduce((acc, curr) => acc + curr.scheduled, 0);
   const totalCompleted = chartData.reduce((acc, curr) => acc + curr.completed, 0);
@@ -54,7 +56,7 @@ export function AreaGraph({ data = [], role = 'guest' }: AreaGraphProps) {
       case 'doctor':
         return 'Your Appointment Trends';
       default:
-        return 'Appointment Trends';
+        return t('common.appointment_trends');
     }
   };
 
@@ -77,10 +79,10 @@ export function AreaGraph({ data = [], role = 'guest' }: AreaGraphProps) {
             <IconCalendarEvent className='size-5' />
             {getTitle()}
           </CardTitle>
-          <CardDescription>No appointment data available</CardDescription>
+          <CardDescription>{t('common.no_appointment_data')}</CardDescription>
         </CardHeader>
         <CardContent className='flex items-center justify-center h-[250px]'>
-          <p className='text-muted-foreground text-sm'>No data to display</p>
+          <p className='text-muted-foreground text-sm'>{t('common.no_data_display')}</p>
         </CardContent>
       </Card>
     );

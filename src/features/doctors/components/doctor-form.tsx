@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import * as z from 'zod';
 import { useEffect, useState } from 'react';
 import { CheckCircle2, Loader2 } from 'lucide-react';
+import { useI18n } from '@/providers/i18n-provider';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -42,6 +43,7 @@ export default function DoctorForm({
   initialData: Doctor | null;
   pageTitle: string;
 }) {
+  const { t } = useI18n();
   const [hospitals, setHospitals] = useState<Array<{ label: string; value: string }>>([]);
   const [isChecking, setIsChecking] = useState(false);
   const [existingDoctor, setExistingDoctor] = useState<Doctor | null>(null);
@@ -205,16 +207,17 @@ export default function DoctorForm({
   return (
     <Card className='mx-auto w-full'>
       <CardHeader>
-        <CardTitle className='text-left text-2xl font-bold'>{pageTitle}</CardTitle>
+        <CardTitle className='text-left text-2xl font-bold'>
+          {initialData ? t('common.edit') : t('common.create_new')} {t('common.doctors')}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         {existingDoctor && (
           <Alert className="mb-6 border-primary/50 bg-primary/10 text-primary">
             <CheckCircle2 className="h-4 w-4" />
-            <AlertTitle>Doctor Found!</AlertTitle>
+            <AlertTitle>{t('common.doctor_found') || 'Doctor Found!'}</AlertTitle>
             <AlertDescription>
-              This doctor already exists in the system. We've auto-filled their information. 
-              You can update any empty fields and clicking "Link Doctor" will link them to your hospital.
+              {t('common.doctor_found_desc') || "This doctor already exists in the system. We've auto-filled their information."}
             </AlertDescription>
           </Alert>
         )}
@@ -225,8 +228,8 @@ export default function DoctorForm({
               <FormInput 
                 control={form.control} 
                 name='cnic' 
-                label='CNIC' 
-                placeholder='13-digit CNIC' 
+                label={t('common.cnic')} 
+                placeholder={t('common.enter_cnic')} 
                 required 
                 disabled={!!initialData}
               />
@@ -242,8 +245,8 @@ export default function DoctorForm({
             <FormInput 
               control={form.control} 
               name='name' 
-              label='Doctor Name' 
-              placeholder='Enter name' 
+              label={t('common.doctor_name')} 
+              placeholder={t('common.enter_name')} 
               required 
               disabled={!!existingDoctor?.name}
             />
@@ -252,7 +255,7 @@ export default function DoctorForm({
               control={form.control} 
               name='cnicIV' 
               label='CNIC IV' 
-              placeholder='Enter CNIC IV' 
+              placeholder={t('common.enter_cnic_iv')} 
               required 
               disabled={!!existingDoctor?.cnicIV}
             />
@@ -260,8 +263,8 @@ export default function DoctorForm({
             <FormInput 
               control={form.control} 
               name='licenseNumber' 
-              label='License Number' 
-              placeholder='Medical license number' 
+              label={t('common.license_number')} 
+              placeholder={t('common.enter_license')} 
               required 
               disabled={!!existingDoctor?.licenseNumber}
             />
@@ -269,7 +272,7 @@ export default function DoctorForm({
             <FormSelect 
               control={form.control} 
               name='gender' 
-              label='Gender' 
+              label={t('common.gender')} 
               options={[
                 { label: 'Male', value: 'male' },
                 { label: 'Female', value: 'female' },
@@ -281,14 +284,14 @@ export default function DoctorForm({
             <FormDatePicker 
               control={form.control} 
               name='dateOfBirth' 
-              label='Date of Birth' 
+              label={t('common.dob')} 
               disabled={!!existingDoctor?.dateOfBirth}
             />
             
             <FormInput 
               control={form.control} 
               name='specialization' 
-              label='Specialization' 
+              label={t('common.specialization')} 
               placeholder='e.g., Cardiology' 
               disabled={!!existingDoctor?.specialization}
             />
@@ -296,7 +299,7 @@ export default function DoctorForm({
             <FormInput 
               control={form.control} 
               name='experienceYears' 
-              label='Experience (Years)' 
+              label={t('common.experience_years')} 
               placeholder='Years of experience' 
               type='number' 
               min={0}
@@ -308,7 +311,7 @@ export default function DoctorForm({
             <FormInput 
               control={form.control} 
               name='qualifications' 
-              label='Qualifications' 
+              label={t('common.qualification')} 
               placeholder='MBBS, MD (comma separated)' 
               disabled={!!existingDoctor?.qualifications?.length}
             />
@@ -316,7 +319,7 @@ export default function DoctorForm({
             <FormInput 
               control={form.control} 
               name='subSpecialization' 
-              label='Sub-Specializations' 
+              label='Sub-Specializations' // Need key
               placeholder='Interventional Cardiology (comma separated)' 
               disabled={!!existingDoctor?.subSpecialization?.length}
             />
@@ -324,55 +327,61 @@ export default function DoctorForm({
             <FormSelect 
               control={form.control} 
               name='hospitalIds' 
-              label='Primary Hospital' 
-              placeholder='Select hospital'
+              label={t('common.hospital_name')} // Primary Hospital?
+              placeholder={t('common.select_type')} // Select hospital
               options={hospitals}
             />
           </div>
 
           <div className='space-y-4'>
-            <h3 className='text-lg font-semibold'>Contact Information</h3>
+            <h3 className='text-lg font-semibold'>{t('common.contact_info')}</h3>
             <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
               <FormInput 
                 control={form.control} 
                 name='contact.primaryNumber' 
-                label='Primary Number' 
-                placeholder='Phone number' 
+                label={t('common.primary_number')} 
+                placeholder={t('common.phone')} 
                 disabled={!!existingDoctor?.contact?.primaryNumber}
               />
               <FormInput 
                 control={form.control} 
                 name='contact.secondaryNumber' 
-                label='Secondary Number' 
-                placeholder='Alternate phone' 
+                label={t('common.secondary_number')} 
+                placeholder={t('common.phone')} 
                 disabled={!!existingDoctor?.contact?.secondaryNumber}
               />
               <FormInput 
                 control={form.control} 
                 name='contact.area' 
-                label='Area' 
+                label='Area' // Need key
                 placeholder='Area' 
                 disabled={!!existingDoctor?.contact?.area}
               />
               <FormInput 
                 control={form.control} 
                 name='contact.city' 
-                label='City' 
-                placeholder='City' 
+                label={t('common.city')} 
+                placeholder={t('common.city')} 
                 disabled={!!existingDoctor?.contact?.city}
               />
               <FormInput 
                 control={form.control} 
                 name='contact.state' 
-                label='State' 
-                placeholder='State' 
+                label={t('common.state')} 
+                placeholder={t('common.state')} 
                 disabled={!!existingDoctor?.contact?.state}
               />
             </div>
           </div>
 
           <Button type='submit' disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? 'Saving...' : existingDoctor ? 'Link Doctor' : initialData ? 'Update Doctor' : 'Create Doctor'}
+            {form.formState.isSubmitting 
+              ? t('common.saving') 
+              : existingDoctor 
+                ? 'Link Doctor' // Need key
+                : initialData 
+                  ? t('common.update') 
+                  : t('common.create')}
           </Button>
         </Form>
       </CardContent>

@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import * as z from 'zod';
 import { useEffect, useState } from 'react';
 import { submitWithOfflineSupport } from '@/lib/offline/form-submission';
+import { useI18n } from '@/providers/i18n-provider';
 
 const categoryOptions = [
   { label: 'Equipment', value: 'Equipment' },
@@ -42,6 +43,7 @@ export default function FacilityForm({
   initialData: Facility | null;
   pageTitle: string;
 }) {
+  const { t } = useI18n();
   const [hospitals, setHospitals] = useState<Array<{ label: string; value: string }>>([]);
 
   useEffect(() => {
@@ -109,32 +111,46 @@ export default function FacilityForm({
         }
       );
     } catch (error) {
-      toast.error('Failed to save facility');
+      toast.error(t('common.failed_to_save_facility'));
     }
   }
+
+  const localizedCategoryOptions = [
+    { label: t('common.equipment'), value: 'Equipment' },
+    { label: t('common.medication'), value: 'Medication' },
+    { label: t('common.facility'), value: 'Facility' }
+  ];
+
+  const localizedStatusOptions = [
+    { label: t('common.operational'), value: 'Operational' },
+    { label: t('common.out_of_service'), value: 'Out of Service' },
+    { label: t('common.under_maintenance'), value: 'Under Maintenance' }
+  ];
 
   return (
     <Card className='mx-auto w-full'>
       <CardHeader>
-        <CardTitle className='text-left text-2xl font-bold'>{pageTitle}</CardTitle>
+        <CardTitle className='text-left text-2xl font-bold'>
+          {initialData ? t('common.update') + ' ' + t('common.facility') : t('common.create') + ' ' + t('common.facility')}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <Form form={form} onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
           <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
-            <FormSelect control={form.control} name='hospitalId' label='Hospital' placeholder='Select hospital' required options={hospitals} />
-            <FormSelect control={form.control} name='category' label='Category' placeholder='Select category' required options={categoryOptions} />
+            <FormSelect control={form.control} name='hospitalId' label={t('common.hospital')} placeholder={t('common.select_hospital')} required options={hospitals} />
+            <FormSelect control={form.control} name='category' label={t('common.category')} placeholder={t('common.select_category')} required options={localizedCategoryOptions} />
           </div>
 
-          <FormInput control={form.control} name='name' label='Name' placeholder='Enter facility name' required />
+          <FormInput control={form.control} name='name' label={t('common.name')} placeholder={t('common.enter_facility_name')} required />
 
           <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
-            <FormInput control={form.control} name='quantity' label='Quantity' placeholder='0' required type='number' />
-            <FormInput control={form.control} name='inUse' label='In Use' placeholder='0' type='number' />
-            <FormSelect control={form.control} name='status' label='Status' placeholder='Select status' required options={statusOptions} />
+            <FormInput control={form.control} name='quantity' label={t('common.quantity')} placeholder='0' required type='number' />
+            <FormInput control={form.control} name='inUse' label={t('common.in_use')} placeholder='0' type='number' />
+            <FormSelect control={form.control} name='status' label={t('common.status')} placeholder={t('common.select_status')} required options={localizedStatusOptions} />
           </div>
 
           <Button type='submit' disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? 'Saving...' : initialData ? 'Update Facility' : 'Create Facility'}
+            {form.formState.isSubmitting ? t('common.saving') : initialData ? t('common.update_facility') : t('common.create_facility')}
           </Button>
         </Form>
       </CardContent>

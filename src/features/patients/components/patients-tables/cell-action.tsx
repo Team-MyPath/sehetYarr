@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { PatientSummaryModal } from '../patient-summary-modal';
+import { useI18n } from '@/providers/i18n-provider';
 
 interface CellActionProps {
   data: Patient;
@@ -25,6 +26,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const [open, setOpen] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const router = useRouter();
+  const { t } = useI18n();
 
   const onConfirm = async () => {
     try {
@@ -56,6 +58,10 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
         onClose={() => setOpen(false)}
         onConfirm={onConfirm}
         loading={loading}
+        title={t('common.delete') + '?'}
+        description="Are you sure you want to delete this patient?"
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
       />
       <PatientSummaryModal 
         isOpen={showSummary}
@@ -65,25 +71,25 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-8 w-8 p-0">
-            <span className="sr-only">Open menu</span>
+            <span className="sr-only">{t('common.actions')}</span>
             <IconDotsVertical className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuLabel>{t('common.actions')}</DropdownMenuLabel>
 
           <DropdownMenuItem
             onClick={() => setShowSummary(true)}
           >
-            <IconFileDescription className="mr-2 h-4 w-4" /> View Summary
+            <IconFileDescription className="mr-2 h-4 w-4" /> {t('common.view')}
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => router.push(`/dashboard/patients/${data._id}`)}
           >
-            <IconEdit className="mr-2 h-4 w-4" /> Update
+            <IconEdit className="mr-2 h-4 w-4" /> {t('common.edit')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setOpen(true)}>
-            <IconTrash className="mr-2 h-4 w-4" /> Delete
+            <IconTrash className="mr-2 h-4 w-4" /> {t('common.delete')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

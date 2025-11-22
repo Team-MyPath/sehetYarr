@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import * as z from 'zod';
 import { useState, useEffect } from 'react';
 import { CheckCircle2, Loader2 } from 'lucide-react';
+import { useI18n } from '@/providers/i18n-provider';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -40,6 +41,7 @@ export default function PatientForm({
   initialData: Patient | null;
   pageTitle: string;
 }) {
+  const { t } = useI18n();
   const defaultValues = {
     name: initialData?.name || '',
     cnic: initialData?.cnic || '',
@@ -173,16 +175,17 @@ export default function PatientForm({
   return (
     <Card className='mx-auto w-full'>
       <CardHeader>
-        <CardTitle className='text-left text-2xl font-bold'>{pageTitle}</CardTitle>
+        <CardTitle className='text-left text-2xl font-bold'>
+          {initialData ? t('common.edit') : t('common.create_new')} {t('common.patients')}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         {existingPatient && (
           <Alert className="mb-6 border-primary/50 bg-primary/10 text-primary">
             <CheckCircle2 className="h-4 w-4" />
-            <AlertTitle>Patient Found!</AlertTitle>
+            <AlertTitle>{t('common.patient_found')}</AlertTitle>
             <AlertDescription>
-              This patient already exists in the system. We've auto-filled their information. 
-              Clicking "Create Patient" will link them to your hospital.
+              {t('common.patient_found_desc')}
             </AlertDescription>
           </Alert>
         )}
@@ -193,8 +196,8 @@ export default function PatientForm({
               <FormInput 
                 control={form.control} 
                 name='cnic' 
-                label='CNIC' 
-                placeholder='13-digit CNIC' 
+                label={t('common.cnic')} 
+                placeholder={t('common.enter_cnic')} 
                 required 
                 disabled={!!initialData}
               />
@@ -210,8 +213,8 @@ export default function PatientForm({
             <FormInput 
               control={form.control} 
               name='name' 
-              label='Patient Name' 
-              placeholder='Enter name' 
+              label={t('common.patient_name')} 
+              placeholder={t('common.enter_name')} 
               required 
               disabled={!!existingPatient?.name}
             />
@@ -220,7 +223,7 @@ export default function PatientForm({
               control={form.control} 
               name='cnicIV' 
               label='CNIC IV' 
-              placeholder='Enter CNIC IV' 
+              placeholder={t('common.enter_cnic_iv')} 
               required 
               disabled={!!existingPatient?.cnicIV}
             />
@@ -228,7 +231,7 @@ export default function PatientForm({
             <FormSelect 
               control={form.control} 
               name='gender' 
-              label='Gender' 
+              label={t('common.gender')} 
               required 
               options={[
                 { label: 'Male', value: 'male' },
@@ -241,7 +244,7 @@ export default function PatientForm({
             <FormDatePicker 
               control={form.control} 
               name='dateOfBirth' 
-              label='Date of Birth' 
+              label={t('common.dob')} 
               required 
               disabled={!!existingPatient?.dateOfBirth}
             />
@@ -249,7 +252,7 @@ export default function PatientForm({
             <FormSelect 
               control={form.control} 
               name='bloodGroup' 
-              label='Blood Group' 
+              label={t('common.blood_group')} 
               options={[
                 { label: 'A+', value: 'A+' }, { label: 'A-', value: 'A-' },
                 { label: 'B+', value: 'B+' }, { label: 'B-', value: 'B-' },
@@ -261,27 +264,33 @@ export default function PatientForm({
           </div>
 
           <div className='space-y-4'>
-            <h3 className='text-lg font-semibold'>Contact Information</h3>
+            <h3 className='text-lg font-semibold'>{t('common.contact_info')}</h3>
             <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
-              <FormInput control={form.control} name='contact.primaryNumber' label='Primary Number' placeholder='Phone number' disabled={!!existingPatient?.contact?.primaryNumber} />
-              <FormInput control={form.control} name='contact.secondaryNumber' label='Secondary Number' placeholder='Alternate phone' disabled={!!existingPatient?.contact?.secondaryNumber} />
-              <FormInput control={form.control} name='contact.address' label='Address' placeholder='Street address' disabled={!!existingPatient?.contact?.address} />
-              <FormInput control={form.control} name='contact.city' label='City' placeholder='City' disabled={!!existingPatient?.contact?.city} />
-              <FormInput control={form.control} name='contact.state' label='State' placeholder='State' disabled={!!existingPatient?.contact?.state} />
+              <FormInput control={form.control} name='contact.primaryNumber' label={t('common.primary_number')} placeholder={t('common.phone')} disabled={!!existingPatient?.contact?.primaryNumber} />
+              <FormInput control={form.control} name='contact.secondaryNumber' label={t('common.secondary_number')} placeholder={t('common.phone')} disabled={!!existingPatient?.contact?.secondaryNumber} />
+              <FormInput control={form.control} name='contact.address' label={t('common.address')} placeholder={t('common.address')} disabled={!!existingPatient?.contact?.address} />
+              <FormInput control={form.control} name='contact.city' label={t('common.city')} placeholder={t('common.city')} disabled={!!existingPatient?.contact?.city} />
+              <FormInput control={form.control} name='contact.state' label={t('common.state')} placeholder={t('common.state')} disabled={!!existingPatient?.contact?.state} />
             </div>
           </div>
 
           <div className='space-y-4'>
-            <h3 className='text-lg font-semibold'>Emergency Contact</h3>
+            <h3 className='text-lg font-semibold'>{t('common.emergency_contact')}</h3>
             <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
-              <FormInput control={form.control} name='emergencyContact.name' label='Name' placeholder='Contact name' disabled={!!existingPatient?.emergencyContact?.name} />
-              <FormInput control={form.control} name='emergencyContact.relation' label='Relation' placeholder='Relationship' disabled={!!existingPatient?.emergencyContact?.relation} />
-              <FormInput control={form.control} name='emergencyContact.phoneNo' label='Phone' placeholder='Contact number' disabled={!!existingPatient?.emergencyContact?.phoneNo} />
+              <FormInput control={form.control} name='emergencyContact.name' label={t('common.name')} placeholder={t('common.name')} disabled={!!existingPatient?.emergencyContact?.name} />
+              <FormInput control={form.control} name='emergencyContact.relation' label={t('common.relation')} placeholder={t('common.relation')} disabled={!!existingPatient?.emergencyContact?.relation} />
+              <FormInput control={form.control} name='emergencyContact.phoneNo' label={t('common.phone')} placeholder={t('common.phone')} disabled={!!existingPatient?.emergencyContact?.phoneNo} />
             </div>
           </div>
 
           <Button type='submit' disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? 'Saving...' : existingPatient ? 'Link Patient' : initialData ? 'Update Patient' : 'Create Patient'}
+            {form.formState.isSubmitting 
+              ? t('common.saving') 
+              : existingPatient 
+                ? t('common.link_patient') 
+                : initialData 
+                  ? t('common.update') 
+                  : t('common.create')}
           </Button>
         </Form>
       </CardContent>

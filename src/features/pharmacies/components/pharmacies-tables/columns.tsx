@@ -5,11 +5,11 @@ import { Pharmacy } from '@/types/pharmacy';
 import { ColumnDef } from '@tanstack/react-table';
 import { CellAction } from './cell-action';
 
-export const columns: ColumnDef<Pharmacy>[] = [
+export const getColumns = (t: any): ColumnDef<Pharmacy>[] => [
   {
     accessorKey: 'name',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Pharmacy Name' />
+      <DataTableColumnHeader column={column} title={t('common.pharmacy_name')} />
     ),
     cell: ({ row }) => {
       return (
@@ -21,14 +21,14 @@ export const columns: ColumnDef<Pharmacy>[] = [
       );
     },
     meta: {
-      label: 'Search by name',
-      placeholder: 'Pharmacy name...',
+      label: t('common.search'),
+      placeholder: t('common.enter_pharmacy_name'),
       variant: 'text'
     }
   },
   {
     accessorKey: 'contact',
-    header: 'Contact',
+    header: t('common.contact'),
     cell: ({ row }) => {
       const contact = row.getValue('contact') as string;
       return (
@@ -41,7 +41,7 @@ export const columns: ColumnDef<Pharmacy>[] = [
   {
     accessorKey: 'location',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Location' />
+      <DataTableColumnHeader column={column} title={t('common.location')} />
     ),
     cell: ({ row }) => {
       const location = row.getValue('location') as Pharmacy['location'];
@@ -55,15 +55,15 @@ export const columns: ColumnDef<Pharmacy>[] = [
       );
     },
     meta: {
-      label: 'Filter by city',
-      placeholder: 'Select city...',
+      label: t('common.filter_by_city'),
+      placeholder: t('common.select_city'),
       variant: 'text'
     }
   },
   {
     accessorKey: 'location.state',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='State' />
+      <DataTableColumnHeader column={column} title={t('common.state')} />
     ),
     cell: ({ row }) => {
       const location = row.getValue('location') as Pharmacy['location'];
@@ -74,21 +74,21 @@ export const columns: ColumnDef<Pharmacy>[] = [
       );
     },
     meta: {
-      label: 'Filter by state',
-      placeholder: 'Select state...',
+      label: t('common.filter_by_state'),
+      placeholder: t('common.select_state'),
       variant: 'text'
     }
   },
   {
     accessorKey: 'inventory',
-    header: 'Inventory Count',
+    header: t('common.inventory_count'),
     cell: ({ row }) => {
       const inventory = row.getValue('inventory') as Pharmacy['inventory'];
       const count = inventory?.length || 0;
       return (
         <div className='text-center'>
           <span className='inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-700/10'>
-            {count} items
+            {count} {t('common.items')}
           </span>
         </div>
       );
@@ -97,7 +97,7 @@ export const columns: ColumnDef<Pharmacy>[] = [
   {
     accessorKey: 'createdAt',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Date Added' />
+      <DataTableColumnHeader column={column} title={t('common.date_added')} />
     ),
     cell: ({ row }) => {
       const date = row.getValue('createdAt') as string;

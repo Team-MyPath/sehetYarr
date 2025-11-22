@@ -14,6 +14,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
 import { useEffect, useState } from 'react';
+import { useI18n } from '@/providers/i18n-provider';
 import { submitWithOfflineSupport } from '@/lib/offline/form-submission';
 
 const genderOptions = [
@@ -75,6 +76,7 @@ export default function WorkerForm({
   initialData: Worker | null;
   pageTitle: string;
 }) {
+  const { t } = useI18n();
   const [hospitals, setHospitals] = useState<Array<{ label: string; value: string }>>([]);
 
   useEffect(() => {
@@ -184,7 +186,6 @@ export default function WorkerForm({
             router.refresh();
           },
           onError: (error) => {
-            // Error is already toasted by submitWithOfflineSupport
             console.error(error);
           }
         }
@@ -197,60 +198,62 @@ export default function WorkerForm({
   return (
     <Card className='mx-auto w-full'>
       <CardHeader>
-        <CardTitle className='text-left text-2xl font-bold'>{pageTitle}</CardTitle>
+        <CardTitle className='text-left text-2xl font-bold'>
+          {initialData ? t('common.edit') : t('common.create_new')} {t('common.workers')}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <Form form={form} onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
           <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
-            <FormInput control={form.control} name='name' label='Name' placeholder='Enter name' required />
-            <FormSelect control={form.control} name='gender' label='Gender' placeholder='Select gender' options={genderOptions} />
+            <FormInput control={form.control} name='name' label={t('common.name')} placeholder={t('common.enter_name')} required />
+            <FormSelect control={form.control} name='gender' label={t('common.gender')} placeholder='Select gender' options={genderOptions} />
           </div>
 
           <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
-            <FormInput control={form.control} name='cnic' label='CNIC' placeholder='xxxxx-xxxxxxx-x' required />
-            <FormInput control={form.control} name='cnicIV' label='CNIC IV' placeholder='Enter CNIC IV' required />
-            <FormDatePicker control={form.control} name='dateOfBirth' label='Date of Birth' />
+            <FormInput control={form.control} name='cnic' label={t('common.cnic')} placeholder={t('common.enter_cnic')} required />
+            <FormInput control={form.control} name='cnicIV' label={t('common.cnic') + ' IV'} placeholder={t('common.enter_cnic_iv')} required />
+            <FormDatePicker control={form.control} name='dateOfBirth' label={t('common.dob')} />
           </div>
 
           <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
-            <FormSelect control={form.control} name='designation' label='Designation' placeholder='Select designation' required options={designationOptions} />
+            <FormSelect control={form.control} name='designation' label={t('common.designation')} placeholder='Select designation' required options={designationOptions} />
             <FormSelect control={form.control} name='department' label='Department' placeholder='Select department' options={departmentOptions} />
-            <FormInput control={form.control} name='experienceYears' label='Experience (Years)' placeholder='0' type='number' />
+            <FormInput control={form.control} name='experienceYears' label={t('common.experience_years')} placeholder='0' type='number' />
           </div>
 
-          <FormInput control={form.control} name='qualifications' label='Qualifications' placeholder='Comma separated (e.g., BSc Nursing, Diploma in Emergency Care)' />
+          <FormInput control={form.control} name='qualifications' label={t('common.qualification')} placeholder='Comma separated (e.g., BSc Nursing, Diploma in Emergency Care)' />
 
           <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
-            <FormSelect control={form.control} name='shiftType' label='Shift Type' placeholder='Select shift' options={shiftTypeOptions} />
-            <FormInput control={form.control} name='shiftStartTime' label='Shift Start Time' placeholder='HH:MM (e.g., 08:00)' />
-            <FormInput control={form.control} name='shiftEndTime' label='Shift End Time' placeholder='HH:MM (e.g., 16:00)' />
+            <FormSelect control={form.control} name='shiftType' label={t('common.shift')} placeholder='Select shift' options={shiftTypeOptions} />
+            <FormInput control={form.control} name='shiftStartTime' label={t('common.start_time')} placeholder='HH:MM (e.g., 08:00)' />
+            <FormInput control={form.control} name='shiftEndTime' label={t('common.end_time')} placeholder='HH:MM (e.g., 16:00)' />
           </div>
 
           <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
-            <FormInput control={form.control} name='primaryNumber' label='Primary Contact' placeholder='+92xxxxxxxxxx' />
-            <FormInput control={form.control} name='secondaryNumber' label='Secondary Contact' placeholder='+92xxxxxxxxxx' />
+            <FormInput control={form.control} name='primaryNumber' label={t('common.primary_number')} placeholder={t('common.phone')} />
+            <FormInput control={form.control} name='secondaryNumber' label={t('common.secondary_number')} placeholder={t('common.phone')} />
           </div>
 
           <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
             <FormInput control={form.control} name='area' label='Area' placeholder='Enter area' />
-            <FormInput control={form.control} name='city' label='City' placeholder='Enter city' />
-            <FormInput control={form.control} name='state' label='State/Province' placeholder='Enter state' />
+            <FormInput control={form.control} name='city' label={t('common.city')} placeholder={t('common.city')} />
+            <FormInput control={form.control} name='state' label={t('common.state')} placeholder={t('common.state')} />
           </div>
 
-          <FormInput control={form.control} name='hospitalIds' label='Hospital IDs' placeholder='Comma separated hospital IDs' />
+          <FormInput control={form.control} name='hospitalIds' label={t('common.hospitals')} placeholder='Comma separated hospital IDs' />
 
-          <FormInput control={form.control} name='licenseNumber' label='License Number' placeholder='Enter license number' />
+          <FormInput control={form.control} name='licenseNumber' label={t('common.license_number')} placeholder={t('common.enter_license')} />
 
           <FormTextarea
             control={form.control}
             name='schemes'
-            label='Schemes'
+            label='Schemes' // Need key
             placeholder='One per line: Scheme Name | Organization | Role&#10;Example: COVID Response | WHO | Medical Staff&#10;Emergency Care | Red Cross | Paramedic'
             config={{ rows: 4, maxLength: 1000, showCharCount: true }}
           />
 
           <Button type='submit' disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? 'Saving...' : initialData ? 'Update Worker' : 'Create Worker'}
+            {form.formState.isSubmitting ? t('common.saving') : initialData ? t('common.update') : t('common.create')}
           </Button>
         </Form>
       </CardContent>

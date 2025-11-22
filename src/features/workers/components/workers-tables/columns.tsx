@@ -6,11 +6,11 @@ import { ColumnDef } from '@tanstack/react-table';
 import { CellAction } from './cell-action';
 import { Badge } from '@/components/ui/badge';
 
-export const columns: ColumnDef<Worker>[] = [
+export const getColumns = (t: any): ColumnDef<Worker>[] => [
   {
     accessorKey: 'name',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Name' />
+      <DataTableColumnHeader column={column} title={t('common.name')} />
     ),
     cell: ({ row }) => {
       return (
@@ -22,7 +22,7 @@ export const columns: ColumnDef<Worker>[] = [
   },
   {
     accessorKey: 'cnic',
-    header: 'CNIC',
+    header: t('common.cnic'),
     cell: ({ row }) => {
       return <div className='whitespace-nowrap'>{row.getValue('cnic')}</div>;
     }
@@ -30,7 +30,7 @@ export const columns: ColumnDef<Worker>[] = [
   {
     accessorKey: 'designation',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Designation' />
+      <DataTableColumnHeader column={column} title={t('common.designation')} />
     ),
     cell: ({ row }) => {
       const designation = row.getValue('designation') as Worker['designation'];
@@ -46,7 +46,7 @@ export const columns: ColumnDef<Worker>[] = [
   },
   {
     accessorKey: 'department',
-    header: 'Department',
+    header: 'Department', // Need key
     cell: ({ row }) => {
       const department = row.getValue('department') as Worker['department'];
       return <div>{department || '-'}</div>;
@@ -55,16 +55,16 @@ export const columns: ColumnDef<Worker>[] = [
   {
     accessorKey: 'experienceYears',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Experience' />
+      <DataTableColumnHeader column={column} title={t('common.experience')} />
     ),
     cell: ({ row }) => {
       const exp = row.getValue('experienceYears') as number;
-      return <div>{exp ? `${exp} years` : '-'}</div>;
+      return <div>{exp ? `${exp} ${t('common.years') || 'years'}` : '-'}</div>;
     }
   },
   {
     accessorKey: 'shift',
-    header: 'Shift',
+    header: t('common.shift'),
     cell: ({ row }) => {
       const shift = row.getValue('shift') as Worker['shift'];
       return (
@@ -76,12 +76,12 @@ export const columns: ColumnDef<Worker>[] = [
   },
   {
     accessorKey: 'hospitalIds',
-    header: 'Hospitals',
+    header: t('common.hospitals'),
     cell: ({ row }) => {
       const hospitals = row.getValue('hospitalIds') as Worker['hospitalIds'];
       const count = hospitals?.length || 0;
       return count > 0 ? (
-        <Badge variant='outline'>{count} hospital{count !== 1 ? 's' : ''}</Badge>
+        <Badge variant='outline'>{count} {t('common.hospitals') || 'hospitals'}</Badge>
       ) : (
         <span className='text-muted-foreground'>-</span>
       );
@@ -89,7 +89,7 @@ export const columns: ColumnDef<Worker>[] = [
   },
   {
     accessorKey: 'contact',
-    header: 'Contact',
+    header: t('common.contact'),
     cell: ({ row }) => {
       const contact = row.getValue('contact') as Worker['contact'];
       return (

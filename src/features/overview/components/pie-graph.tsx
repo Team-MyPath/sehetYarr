@@ -18,6 +18,7 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from '@/components/ui/chart';
+import { useI18n } from '@/providers/i18n-provider';
 
 interface PieGraphProps {
   data?: Array<{ demographic: string; patients: number }>;
@@ -51,6 +52,7 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function PieGraph({ data = [], role = 'guest' }: PieGraphProps) {
+  const { t } = useI18n();
   const chartData = data.length > 0 ? data : [];
 
   const totalPatients = React.useMemo(() => {
@@ -71,7 +73,7 @@ export function PieGraph({ data = [], role = 'guest' }: PieGraphProps) {
       case 'doctor':
         return 'Your Patient Demographics';
       default:
-        return 'Patient Demographics';
+        return t('common.patient_demographics');
     }
   };
 
@@ -94,10 +96,10 @@ export function PieGraph({ data = [], role = 'guest' }: PieGraphProps) {
             <IconUsers className='size-5' />
             {getTitle()}
           </CardTitle>
-          <CardDescription>No patient demographic data available</CardDescription>
+          <CardDescription>{t('common.no_demographic_data')}</CardDescription>
         </CardHeader>
         <CardContent className='flex items-center justify-center h-[250px]'>
-          <p className='text-muted-foreground text-sm'>No data to display</p>
+          <p className='text-muted-foreground text-sm'>{t('common.no_data_display')}</p>
         </CardContent>
       </Card>
     );
@@ -185,7 +187,7 @@ export function PieGraph({ data = [], role = 'guest' }: PieGraphProps) {
                           y={(viewBox.cy || 0) + 24}
                           className='fill-muted-foreground text-sm'
                         >
-                          Total Patients
+                          {t('common.patients')}
                         </tspan>
                       </text>
                     );

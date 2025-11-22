@@ -14,6 +14,8 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
 import { useEffect, useState } from 'react';
+import { useI18n } from '@/providers/i18n-provider';
+import { submitWithOfflineSupport } from '@/lib/offline/form-submission';
 
 const formSchema = z.object({
   patientId: z.string().min(1, { message: 'Patient is required.' }),
@@ -37,6 +39,7 @@ export default function MedicalRecordForm({
   initialData: MedicalRecord | null;
   pageTitle: string;
 }) {
+  const { t } = useI18n();
   const [patients, setPatients] = useState<Array<{ label: string; value: string }>>([]);
   const [doctors, setDoctors] = useState<Array<{ label: string; value: string }>>([]);
   const [hospitals, setHospitals] = useState<Array<{ label: string; value: string }>>([]);
@@ -145,9 +148,6 @@ export default function MedicalRecordForm({
         : '/api/medical-records';
       const method = initialData ? 'PUT' : 'POST';
 
-      // Import offline submission utility
-      const { submitWithOfflineSupport } = await import('@/lib/offline/form-submission');
-
       const result = await submitWithOfflineSupport(
         'medical_records',
         payload,
@@ -174,22 +174,24 @@ export default function MedicalRecordForm({
   return (
     <Card className='mx-auto w-full'>
       <CardHeader>
-        <CardTitle className='text-left text-2xl font-bold'>{pageTitle}</CardTitle>
+        <CardTitle className='text-left text-2xl font-bold'>
+          {initialData ? t('common.edit') : t('common.create_new')} {t('common.medical_records')}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <Form form={form} onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
           <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
-            <FormSelect control={form.control} name='patientId' label='Patient' placeholder='Select patient' required options={patients} />
-            <FormSelect control={form.control} name='doctorId' label='Doctor' placeholder='Select doctor' required options={doctors} />
-            <FormSelect control={form.control} name='hospitalId' label='Hospital' placeholder='Select hospital' required options={hospitals} />
+            <FormSelect control={form.control} name='patientId' label={t('common.patient_name')} placeholder={t('common.select_patient')} required options={patients} />
+            <FormSelect control={form.control} name='doctorId' label={t('common.doctor_name')} placeholder={t('common.select_doctor')} required options={doctors} />
+            <FormSelect control={form.control} name='hospitalId' label={t('common.hospital_name')} placeholder={t('common.select_type')} required options={hospitals} />
           </div>
 
           <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
-            <FormDatePicker control={form.control} name='visitDate' label='Visit Date' />
+            <FormDatePicker control={form.control} name='visitDate' label={t('common.record_date')} />
             <FormDatePicker control={form.control} name='followUpDate' label='Follow-up Date' />
           </div>
 
-          <FormInput control={form.control} name='diagnosis' label='Diagnosis' placeholder='Enter diagnosis' />
+          <FormInput control={form.control} name='diagnosis' label={t('common.diagnosis')} placeholder='Enter diagnosis' />
           
           <FormInput control={form.control} name='symptoms' label='Symptoms' placeholder='Comma separated (e.g., fever, headache, cough)' />
           
@@ -198,7 +200,7 @@ export default function MedicalRecordForm({
           <FormTextarea
             control={form.control}
             name='prescriptions'
-            label='Prescriptions'
+            label={t('common.prescription')}
             placeholder='One per line: Medicine | Dosage | Frequency | Duration&#10;Example: Paracetamol | 500mg | 3 times daily | 5 days'
             config={{ rows: 5, maxLength: 2000, showCharCount: true }}
           />
@@ -206,7 +208,7 @@ export default function MedicalRecordForm({
           <FormTextarea
             control={form.control}
             name='testsOrdered'
-            label='Tests Ordered'
+            label='Tests Ordered' // Need key
             placeholder='One per line: Test Name | Results&#10;Example: Blood Test | Normal&#10;X-Ray Chest | Clear'
             config={{ rows: 4, maxLength: 1000, showCharCount: true }}
           />
@@ -214,7 +216,7 @@ export default function MedicalRecordForm({
           <FormTextarea
             control={form.control}
             name='treatmentPlan'
-            label='Treatment Plan'
+            label='Treatment Plan' // Need key
             placeholder='Describe the treatment plan'
             config={{ rows: 4, maxLength: 1000, showCharCount: true }}
           />
@@ -222,13 +224,17 @@ export default function MedicalRecordForm({
           <FormTextarea
             control={form.control}
             name='notes'
-            label='Additional Notes'
+            label={t('common.notes')}
             placeholder='Any additional notes or observations'
             config={{ rows: 3, maxLength: 500, showCharCount: true }}
           />
 
           <Button type='submit' disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? 'Saving...' : initialData ? 'Update Medical Record' : 'Create Medical Record'}
+            {form.formState.isSubmitting 
+              ? t('common.saving') 
+              : initialData 
+                ? t('common.update') 
+                : t('common.create')}
           </Button>
         </Form>
       </CardContent>

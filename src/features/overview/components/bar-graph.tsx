@@ -16,6 +16,7 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from '@/components/ui/chart';
+import { useI18n } from '@/providers/i18n-provider';
 
 export const description = 'Healthcare registrations over time';
 
@@ -39,6 +40,7 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function BarGraph({ data = [], role = 'guest' }: BarGraphProps) {
+  const { t, language } = useI18n();
   const chartData = data.length > 0 ? data : [];
   const [activeChart, setActiveChart] =
     React.useState<keyof typeof chartConfig>('patients');
@@ -46,11 +48,11 @@ export function BarGraph({ data = [], role = 'guest' }: BarGraphProps) {
   const getTitle = () => {
     switch (role) {
       case 'hospital':
-        return 'Facility Registrations';
+        return t('common.facility_registrations');
       case 'doctor':
-        return 'Your Patient Growth';
+        return t('common.patient_growth');
       default:
-        return 'Healthcare Registrations';
+        return t('common.healthcare_registrations');
     }
   };
 
@@ -61,7 +63,7 @@ export function BarGraph({ data = [], role = 'guest' }: BarGraphProps) {
       case 'doctor':
         return 'New patients under your care for the last 3 months';
       default:
-        return 'New registrations for the last 3 months';
+        return t('common.new_registrations_desc');
     }
   };
 
@@ -88,10 +90,10 @@ export function BarGraph({ data = [], role = 'guest' }: BarGraphProps) {
       <Card className='@container/card !pt-3'>
         <CardHeader>
           <CardTitle>{getTitle()}</CardTitle>
-          <CardDescription>No registration data available</CardDescription>
+          <CardDescription>{t('common.no_registration_data')}</CardDescription>
         </CardHeader>
         <CardContent className='flex items-center justify-center h-[250px]'>
-          <p className='text-muted-foreground text-sm'>No data to display</p>
+          <p className='text-muted-foreground text-sm'>{t('common.no_data_display')}</p>
         </CardContent>
       </Card>
     );
@@ -106,7 +108,7 @@ export function BarGraph({ data = [], role = 'guest' }: BarGraphProps) {
             <span className='hidden @[540px]/card:block'>
               {getDescription()}
             </span>
-            <span className='@[540px]/card:hidden'>Last 3 months</span>
+            <span className='@[540px]/card:hidden'>{t('common.last_3_months')}</span>
           </CardDescription>
         </div>
         <div className='flex'>
@@ -120,7 +122,7 @@ export function BarGraph({ data = [], role = 'guest' }: BarGraphProps) {
                 onClick={() => setActiveChart(chart)}
               >
                 <span className='text-muted-foreground text-xs'>
-                  {chartConfig[chart].label}
+                  {t(`common.${key}`)}
                 </span>
                 <span className='text-lg leading-none font-bold sm:text-3xl'>
                   {total[key as keyof typeof total]?.toLocaleString()}
@@ -165,7 +167,7 @@ export function BarGraph({ data = [], role = 'guest' }: BarGraphProps) {
               minTickGap={32}
               tickFormatter={(value) => {
                 const date = new Date(value);
-                return date.toLocaleDateString('en-US', {
+                return date.toLocaleDateString(language, {
                   month: 'short',
                   day: 'numeric'
                 });
@@ -178,7 +180,7 @@ export function BarGraph({ data = [], role = 'guest' }: BarGraphProps) {
                   className='w-[150px]'
                   nameKey='registrations'
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString('en-US', {
+                    return new Date(value).toLocaleDateString(language, {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric'

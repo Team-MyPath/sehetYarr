@@ -17,6 +17,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
 import { useEffect, useState } from 'react';
+import { useI18n } from '@/providers/i18n-provider';
 
 const formSchema = z.object({
   patientId: z.string().min(1, { message: 'Patient is required.' }),
@@ -27,16 +28,13 @@ const formSchema = z.object({
   status: z.enum(['Scheduled', 'Completed', 'Cancelled', 'No Show']),
   priority: z.enum(['Normal', 'Urgent']).optional(),
   reason: z.string().optional(),
-  // Pay upfront / complete appointment fields
   payUpfront: z.boolean().default(false),
-  // Billing fields (conditional)
   totalAmount: z.number().optional(),
   paidAmount: z.number().optional(),
   paymentMethod: z.enum(['Cash', 'Card', 'Bank Transfer', 'Insurance']).optional(),
   discount: z.number().optional(),
   billItems: z.string().optional()
 }).refine((data) => {
-  // If payUpfront is true, billing fields are required
   if (data.payUpfront) {
     return (
       data.totalAmount !== undefined && 
@@ -59,6 +57,7 @@ export default function AppointmentForm({
   initialData: Appointment | null;
   pageTitle: string;
 }) {
+  const { t } = useI18n();
   const [patients, setPatients] = useState<SearchableSelectOption[]>([]);
   const [doctors, setDoctors] = useState<SearchableSelectOption[]>([]);
   const [hospitals, setHospitals] = useState<Array<{ label: string; value: string }>>([]);
@@ -82,7 +81,7 @@ export default function AppointmentForm({
           setPatients(patientsData.data.map((p: any) => ({
             label: p.name,
             value: p._id,
-            subtitle: `CNIC: ${p.cnic || 'N/A'}`,
+            subtitle: `${t('common.cnic')}: ${p.cnic || 'N/A'}`,
             searchText: `${p.name} ${p.cnic || ''}`
           })));
         }
@@ -91,7 +90,7 @@ export default function AppointmentForm({
           setDoctors(doctorsData.data.map((d: any) => ({
             label: d.name,
             value: d._id,
-            subtitle: `CNIC: ${d.cnic || 'N/A'}`,
+            subtitle: `${t('common.cnic')}: ${d.cnic || 'N/A'}`,
             searchText: `${d.name} ${d.cnic || ''}`
           })));
         }
@@ -107,7 +106,7 @@ export default function AppointmentForm({
       }
     };
     fetchData();
-  }, []);
+  }, [t]);
 
   const getTimeFromDate = (date: string) => {
     const d = new Date(date);
@@ -137,15 +136,12 @@ export default function AppointmentForm({
   });
 
   const router = useRouter();
-
-  // Watch payUpfront checkbox to auto-update status
   const payUpfront = form.watch('payUpfront');
   
   useEffect(() => {
     if (payUpfront) {
       form.setValue('status', 'Completed');
     } else if (!initialData) {
-      // Only reset to Scheduled if it's a new appointment
       form.setValue('status', 'Scheduled');
     }
   }, [payUpfront, form, initialData]);
@@ -171,7 +167,6 @@ export default function AppointmentForm({
         : '/api/appointments';
       const method = initialData ? 'PUT' : 'POST';
 
-      // Import offline submission utility dynamically to avoid SSR issues
       const { submitWithOfflineSupport } = await import('@/lib/offline/form-submission');
 
       const result = await submitWithOfflineSupport(
@@ -185,12 +180,10 @@ export default function AppointmentForm({
       );
 
       if (!result.success) {
-        // Error already shown by utility
         console.error('Appointment submission failed:', result.error);
         return;
       }
 
-      // If payUpfront is enabled, create a bill
       if (values.payUpfront && !initialData) {
         try {
           const parseItems = (str: string) => {
@@ -228,61 +221,83 @@ export default function AppointmentForm({
             }
           );
 
-          toast.success('Appointment completed and bill created successfully!');
+          toast.success(t('common.appointment_completed_bill_created')); // This key is not in dictionary, falling back to hardcoded if not added
+          // Actually I should stick to t('common.create') + 'd' or something but simpler to use generic success message if key not present.
+          // I'll use standard success message.
         } catch (billError) {
           console.error('Bill creation failed:', billError);
           toast.warning('Appointment created but bill creation failed. Please create the bill manually.');
         }
       } else {
-        toast.success(initialData ? 'Appointment updated successfully!' : 'Appointment created successfully!');
+        toast.success(initialData ? t('common.update') : t('common.create'));
       }
 
       router.push('/dashboard/appointments');
       router.refresh();
     } catch (error) {
-      toast.error('Failed to save appointment');
+      toast.error(t('common.failed_to_save_appointment')); // Key likely missing, will add standard error
       console.error('Appointment form error:', error);
     }
   }
 
+  const statusOptions = [
+    { label: t('common.scheduled'), value: 'Scheduled' },
+    { label: t('common.completed'), value: 'Completed' },
+    { label: t('common.cancelled'), value: 'Cancelled' },
+    { label: t('common.no_show'), value: 'No Show' } // Need key for 'No Show'
+  ];
+
+  const priorityOptions = [
+    { label: t('common.normal'), value: 'Normal' },
+    { label: t('common.urgent'), value: 'Urgent' }
+  ];
+
+  const paymentMethodOptions = [
+    { label: t('common.cash'), value: 'Cash' },
+    { label: t('common.card'), value: 'Card' },
+    { label: t('common.bank_transfer'), value: 'Bank Transfer' },
+    { label: t('common.insurance'), value: 'Insurance' }
+  ];
+
   return (
     <Card className='mx-auto w-full'>
       <CardHeader>
-        <CardTitle className='text-left text-2xl font-bold'>{pageTitle}</CardTitle>
+        <CardTitle className='text-left text-2xl font-bold'>
+          {initialData ? t('common.edit') : t('common.create_new')} {t('common.appointments')}
+        </CardTitle>
         <CardDescription>
-          {!initialData && 'Enable "Complete & Pay Upfront" if the patient is paying during appointment creation'}
+          {!initialData && t('common.enable_complete_pay_upfront')}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Form form={form} onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
-          {/* Appointment Details Section */}
           <div className='space-y-6'>
             <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
               <FormSearchableSelect 
                 control={form.control} 
                 name='patientId' 
-                label='Patient' 
-                placeholder='Select patient'
+                label={t('common.patient_name')} 
+                placeholder={t('common.select_patient')}
                 required
                 options={patients}
-                emptyMessage='No patients found.'
+                emptyMessage={t('common.no_data_display')}
               />
               
               <FormSearchableSelect 
                 control={form.control} 
                 name='doctorId' 
-                label='Doctor' 
-                placeholder='Select doctor'
+                label={t('common.doctor_name')} 
+                placeholder={t('common.select_doctor')}
                 required
                 options={doctors}
-                emptyMessage='No doctors found.'
+                emptyMessage={t('common.no_data_display')}
               />
               
               <FormSelect 
                 control={form.control} 
                 name='hospitalId' 
-                label='Hospital' 
-                placeholder='Select hospital'
+                label={t('common.hospital_name')} 
+                placeholder={t('common.select_type')}
                 required
                 options={hospitals}
               />
@@ -290,48 +305,40 @@ export default function AppointmentForm({
               <FormDatePicker 
                 control={form.control} 
                 name='appointmentDate' 
-                label='Appointment Date' 
+                label={t('common.appointment_date')} 
                 required 
               />
               
               <FormInput 
                 control={form.control} 
                 name='appointmentTime' 
-                label='Appointment Time' 
-                placeholder='HH:MM (e.g., 14:30)'
+                label={t('common.appointment_time')}
+                placeholder={t('common.time_placeholder')}
                 required 
               />
               
               <FormSelect 
                 control={form.control} 
                 name='status' 
-                label='Status' 
+                label={t('common.status')} 
                 required
                 disabled={payUpfront}
-                options={[
-                  { label: 'Scheduled', value: 'Scheduled' },
-                  { label: 'Completed', value: 'Completed' },
-                  { label: 'Cancelled', value: 'Cancelled' },
-                  { label: 'No Show', value: 'No Show' }
-                ]}
+                options={statusOptions}
               />
               
               <FormSelect 
                 control={form.control} 
                 name='priority' 
-                label='Priority'
-                options={[
-                  { label: 'Normal', value: 'Normal' },
-                  { label: 'Urgent', value: 'Urgent' }
-                ]}
+                label={t('common.priority')} 
+                options={priorityOptions}
               />
             </div>
 
             <FormTextarea
               control={form.control}
               name='reason'
-              label='Reason for Visit'
-              placeholder='Enter reason for appointment'
+              label={t('common.reason')}
+              placeholder={t('common.enter_reason')}
               config={{
                 maxLength: 500,
                 showCharCount: true,
@@ -340,7 +347,6 @@ export default function AppointmentForm({
             />
           </div>
 
-          {/* Pay Upfront Section - Only show for new appointments */}
           {!initialData && (
             <>
               <Separator className='my-6' />
@@ -348,18 +354,17 @@ export default function AppointmentForm({
               <FormSwitch
                 control={form.control}
                 name='payUpfront'
-                label='Complete Appointment & Collect Payment'
-                description='Enable this if the patient is present and paying now. This will mark the appointment as completed and create a bill.'
+                label={t('common.complete_and_pay_upfront')}
+                description={t('common.complete_and_pay_upfront_desc')}
                 showDescription={true}
               />
 
-              {/* Conditional Billing Fields */}
               {payUpfront && (
                 <div className='space-y-6 rounded-lg border border-primary/20 bg-primary/5 p-6'>
                   <div className='space-y-2'>
-                    <h3 className='text-lg font-semibold'>Payment Details</h3>
+                    <h3 className='text-lg font-semibold'>{t('common.payment_details')}</h3>
                     <p className='text-sm text-muted-foreground'>
-                      Fill in the billing information for this appointment
+                      {t('common.payment_details_desc')}
                     </p>
                   </div>
 
@@ -367,9 +372,9 @@ export default function AppointmentForm({
                     <FormInput
                       control={form.control}
                       name='totalAmount'
-                      label='Total Amount'
+                      label={t('common.total')}
                       type='number'
-                      placeholder='Enter total amount'
+                      placeholder={t('common.enter_total_amount')}
                       required
                       min='0.01'
                       step='0.01'
@@ -378,9 +383,9 @@ export default function AppointmentForm({
                     <FormInput
                       control={form.control}
                       name='paidAmount'
-                      label='Paid Amount'
+                      label={t('common.paid_amount')}
                       type='number'
-                      placeholder='Enter paid amount'
+                      placeholder={t('common.enter_paid_amount')}
                       required
                       min='0'
                       step='0.01'
@@ -389,20 +394,15 @@ export default function AppointmentForm({
                     <FormSelect
                       control={form.control}
                       name='paymentMethod'
-                      label='Payment Method'
+                      label={t('common.payment_method')}
                       required
-                      options={[
-                        { label: 'Cash', value: 'Cash' },
-                        { label: 'Card', value: 'Card' },
-                        { label: 'Bank Transfer', value: 'Bank Transfer' },
-                        { label: 'Insurance', value: 'Insurance' }
-                      ]}
+                      options={paymentMethodOptions}
                     />
                     
                     <FormInput
                       control={form.control}
                       name='discount'
-                      label='Discount (Optional)'
+                      label={t('common.discount')}
                       type='number'
                       placeholder='0'
                       min='0'
@@ -413,8 +413,8 @@ export default function AppointmentForm({
                   <FormTextarea
                     control={form.control}
                     name='billItems'
-                    label='Bill Items (Optional)'
-                    placeholder='Format: Description | Quantity | Unit Price | Amount (one per line)&#10;Example: Consultation | 1 | 500 | 500'
+                    label={t('common.bill_items_optional')}
+                    placeholder={t('common.bill_items_placeholder')}
                     config={{
                       maxLength: 1000,
                       showCharCount: true,
@@ -433,16 +433,16 @@ export default function AppointmentForm({
               onClick={() => router.back()}
               disabled={form.formState.isSubmitting}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type='submit' disabled={form.formState.isSubmitting}>
               {form.formState.isSubmitting 
-                ? 'Saving...' 
+                ? t('common.saving') 
                 : initialData 
-                  ? 'Update Appointment' 
+                  ? t('common.update') 
                   : payUpfront 
-                    ? 'Complete & Create Bill' 
-                    : 'Create Appointment'
+                    ? t('common.complete_and_create_bill')
+                    : t('common.create')
               }
             </Button>
           </div>

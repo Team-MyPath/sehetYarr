@@ -5,11 +5,11 @@ import { Doctor } from '@/types/doctor';
 import { ColumnDef } from '@tanstack/react-table';
 import { CellAction } from './cell-action';
 
-export const columns: ColumnDef<Doctor>[] = [
+export const getColumns = (t: any): ColumnDef<Doctor>[] => [
   {
     accessorKey: 'name',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Doctor Name' />
+      <DataTableColumnHeader column={column} title={t('common.doctor_name')} />
     ),
     cell: ({ row }) => {
       return (
@@ -21,15 +21,15 @@ export const columns: ColumnDef<Doctor>[] = [
       );
     },
     meta: {
-      label: 'Search by name',
-      placeholder: 'Doctor name...',
+      label: t('common.search'),
+      placeholder: t('common.doctor_name'),
       variant: 'text'
     }
   },
   {
     accessorKey: 'specialization',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Specialization' />
+      <DataTableColumnHeader column={column} title={t('common.specialization')} />
     ),
     cell: ({ row }) => {
       const specialization = row.getValue('specialization') as string;
@@ -40,14 +40,14 @@ export const columns: ColumnDef<Doctor>[] = [
       );
     },
     meta: {
-      label: 'Specialization',
-      placeholder: 'Filter by specialization',
+      label: t('common.specialization'),
+      placeholder: t('common.specialization'), // "Filter by..."
       variant: 'text'
     }
   },
   {
     accessorKey: 'licenseNumber',
-    header: 'License Number',
+    header: t('common.license_number'),
     cell: ({ row }) => {
       return (
         <div className='font-mono text-sm'>
@@ -59,20 +59,20 @@ export const columns: ColumnDef<Doctor>[] = [
   {
     accessorKey: 'experienceYears',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Experience' />
+      <DataTableColumnHeader column={column} title={t('common.experience')} />
     ),
     cell: ({ row }) => {
       const years = row.getValue('experienceYears') as number;
       return (
         <div>
-          {years ? `${years} years` : '-'}
+          {years ? `${years} ${t('common.years') || 'years'}` : '-'}
         </div>
       );
     }
   },
   {
     accessorKey: 'hospitalIds',
-    header: 'Hospitals',
+    header: t('common.hospitals'),
     cell: ({ row }) => {
       const hospitals = row.getValue('hospitalIds') as Doctor['hospitalIds'];
       if (!hospitals || hospitals.length === 0) {
@@ -87,7 +87,7 @@ export const columns: ColumnDef<Doctor>[] = [
   },
   {
     accessorKey: 'contact',
-    header: 'Contact',
+    header: t('common.contact'),
     cell: ({ row }) => {
       const contact = row.getValue('contact') as Doctor['contact'];
       return (

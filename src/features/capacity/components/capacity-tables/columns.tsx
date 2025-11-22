@@ -32,10 +32,10 @@ function getOccupancyColor(percentage: number) {
   return 'text-green-600 font-medium';
 }
 
-export const columns: ColumnDef<Capacity>[] = [
+export const getColumns = (t: any): ColumnDef<Capacity>[] => [
   {
     accessorKey: 'hospitalId',
-    header: 'Hospital',
+    header: t('common.hospital'),
     cell: ({ row }) => {
       const hospital = row.getValue('hospitalId') as Capacity['hospitalId'];
       return (
@@ -48,13 +48,13 @@ export const columns: ColumnDef<Capacity>[] = [
   {
     accessorKey: 'wardType',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Ward Type' />
+      <DataTableColumnHeader column={column} title={t('common.ward_type')} />
     ),
     cell: ({ row }) => {
       const wardType = row.getValue('wardType') as Capacity['wardType'];
       return (
         <Badge variant='outline' className={getWardTypeColor(wardType)}>
-          {wardType}
+          {t(`common.${wardType.toLowerCase()}`)}
         </Badge>
       );
     },
@@ -65,7 +65,7 @@ export const columns: ColumnDef<Capacity>[] = [
   {
     accessorKey: 'totalBeds',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Total Beds' />
+      <DataTableColumnHeader column={column} title={t('common.total_beds')} />
     ),
     cell: ({ row }) => {
       const total = row.getValue('totalBeds') as number;
@@ -75,7 +75,7 @@ export const columns: ColumnDef<Capacity>[] = [
   {
     accessorKey: 'occupiedBeds',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Occupied' />
+      <DataTableColumnHeader column={column} title={t('common.occupied')} />
     ),
     cell: ({ row }) => {
       const occupied = row.getValue('occupiedBeds') as number;
@@ -84,7 +84,7 @@ export const columns: ColumnDef<Capacity>[] = [
   },
   {
     id: 'availableBeds',
-    header: 'Available',
+    header: t('common.available'),
     cell: ({ row }) => {
       const total = row.getValue('totalBeds') as number;
       const occupied = row.getValue('occupiedBeds') as number;
@@ -99,7 +99,7 @@ export const columns: ColumnDef<Capacity>[] = [
   {
     id: 'occupancyRate',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Occupancy %' />
+      <DataTableColumnHeader column={column} title={t('common.occupancy_percentage')} />
     ),
     cell: ({ row }) => {
       const total = row.getValue('totalBeds') as number;
@@ -114,12 +114,12 @@ export const columns: ColumnDef<Capacity>[] = [
   },
   {
     accessorKey: 'equipmentIds',
-    header: 'Equipment',
+    header: t('common.equipment'),
     cell: ({ row }) => {
       const equipment = row.getValue('equipmentIds') as Capacity['equipmentIds'];
       const count = equipment?.length || 0;
       return count > 0 ? (
-        <Badge variant='outline'>{count} item{count !== 1 ? 's' : ''}</Badge>
+        <Badge variant='outline'>{count} {count !== 1 ? t('common.items') : t('common.item')}</Badge>
       ) : (
         <span className='text-muted-foreground'>-</span>
       );
@@ -127,7 +127,7 @@ export const columns: ColumnDef<Capacity>[] = [
   },
   {
     accessorKey: 'notes',
-    header: 'Notes',
+    header: t('common.notes'),
     cell: ({ row }) => {
       const notes = row.getValue('notes') as string;
       return (

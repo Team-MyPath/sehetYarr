@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import * as z from 'zod';
 import { useEffect, useState } from 'react';
 import { submitWithOfflineSupport } from '@/lib/offline/form-submission';
+import { useI18n } from '@/providers/i18n-provider';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -33,6 +34,7 @@ export default function PharmacyForm({
   initialData: Pharmacy | null;
   pageTitle: string;
 }) {
+  const { t } = useI18n();
   const defaultValues = {
     name: initialData?.name || '',
     contact: initialData?.contact || '',
@@ -97,64 +99,82 @@ export default function PharmacyForm({
   return (
     <Card className='mx-auto w-full'>
       <CardHeader>
-        <CardTitle className='text-left text-2xl font-bold'>{pageTitle}</CardTitle>
+        <CardTitle className='text-left text-2xl font-bold'>
+          {initialData ? t('common.edit') : t('common.create_new')} {t('common.pharmacies')}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <Form form={form} onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
           {/* Basic Information */}
           <div className='space-y-4'>
-            <h3 className='text-lg font-semibold'>Basic Information</h3>
+            <h3 className='text-lg font-semibold'>{t('common.basic_info')}</h3>
             <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
-              <FormInput control={form.control} name='name' label='Pharmacy Name' placeholder='Enter pharmacy name' required />
-              <FormInput control={form.control} name='contact' label='Contact Number' placeholder='Phone number' required />
+              <FormInput 
+                control={form.control} 
+                name='name' 
+                label={t('common.pharmacy_name')} 
+                placeholder={t('common.enter_pharmacy_name')} 
+                required 
+              />
+              <FormInput 
+                control={form.control} 
+                name='contact' 
+                label={t('common.contact')} 
+                placeholder={t('common.phone')} 
+                required 
+              />
             </div>
           </div>
 
           {/* Location */}
           <div className='space-y-4'>
-            <h3 className='text-lg font-semibold'>Location</h3>
+            <h3 className='text-lg font-semibold'>{t('common.location')}</h3>
             <div className='grid grid-cols-1 gap-6'>
               <FormInput 
                 control={form.control} 
                 name='location.address' 
-                label='Address' 
-                placeholder='Complete address'
+                label={t('common.address')} 
+                placeholder={t('common.complete_address')}
                 required
               />
               <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
-                <FormInput control={form.control} name='location.city' label='City' placeholder='City' required />
-                <FormInput control={form.control} name='location.state' label='State/Province' placeholder='State' required />
+                <FormInput control={form.control} name='location.city' label={t('common.city')} placeholder={t('common.city')} required />
+                <FormInput control={form.control} name='location.state' label={t('common.state')} placeholder={t('common.state')} required />
               </div>
             </div>
           </div>
 
           {/* Inventory */}
           <div className='space-y-4'>
-            <h3 className='text-lg font-semibold'>Sample Inventory Item</h3>
+            <h3 className='text-lg font-semibold'>{t('common.sample_inventory')}</h3>
             <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
               <FormInput 
                 control={form.control} 
                 name='inventory.name' 
-                label='Medicine Name' 
+                label={t('common.medicine_name')} 
                 placeholder='e.g., Paracetamol'
               />
               <FormInput 
                 control={form.control} 
                 name='inventory.supplier' 
-                label='Supplier' 
+                label={t('common.supplier')} 
                 placeholder='e.g., ABC Pharma'
               />
               <FormInput 
                 control={form.control} 
                 name='inventory.quantity' 
-                label='Quantity' 
+                label={t('common.quantity')} 
                 placeholder='e.g., 100 tablets'
               />
             </div>
           </div>
 
           <Button type='submit' disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? 'Saving...' : initialData ? 'Update Pharmacy' : 'Create Pharmacy'}
+            {form.formState.isSubmitting 
+              ? t('common.saving') 
+              : initialData 
+                ? t('common.update') 
+                : t('common.create')}
           </Button>
         </Form>
       </CardContent>

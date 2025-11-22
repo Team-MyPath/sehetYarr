@@ -18,6 +18,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { IconReceipt } from '@tabler/icons-react';
+import { useI18n } from '@/providers/i18n-provider';
 
 const billingSchema = z.object({
   totalAmount: z.number().min(0.01, { message: 'Total amount must be greater than 0' }),
@@ -48,6 +49,7 @@ export function BillingModal({
   doctorName,
   appointmentDate
 }: BillingModalProps) {
+  const { t } = useI18n();
   const form = useForm<BillingFormData>({
     resolver: zodResolver(billingSchema),
     defaultValues: {
@@ -76,37 +78,44 @@ export function BillingModal({
     }
   };
 
+  const paymentMethodOptions = [
+    { label: t('common.cash'), value: 'Cash' },
+    { label: t('common.card'), value: 'Card' },
+    { label: t('common.bank_transfer'), value: 'Bank Transfer' },
+    { label: t('common.insurance'), value: 'Insurance' }
+  ];
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <div className='flex items-center gap-2'>
             <IconReceipt className='h-5 w-5 text-primary' />
-            <DialogTitle>Complete Appointment & Create Bill</DialogTitle>
+            <DialogTitle>{t('common.complete_and_create_bill')}</DialogTitle>
           </div>
           <DialogDescription>
-            Fill in the billing details to complete this appointment. This action cannot be undone.
+            {t('common.billing_modal_desc')}
           </DialogDescription>
         </DialogHeader>
 
         {(patientName || doctorName || appointmentDate) && (
           <div className='rounded-lg border bg-muted/50 p-4 space-y-2'>
-            <h4 className='text-sm font-semibold'>Appointment Details</h4>
+            <h4 className='text-sm font-semibold'>{t('common.appointment_details')}</h4>
             {patientName && (
               <p className='text-sm'>
-                <span className='text-muted-foreground'>Patient:</span>{' '}
+                <span className='text-muted-foreground'>{t('common.patient_name')}:</span>{' '}
                 <span className='font-medium'>{patientName}</span>
               </p>
             )}
             {doctorName && (
               <p className='text-sm'>
-                <span className='text-muted-foreground'>Doctor:</span>{' '}
+                <span className='text-muted-foreground'>{t('common.doctor_name')}:</span>{' '}
                 <span className='font-medium'>{doctorName}</span>
               </p>
             )}
             {appointmentDate && (
               <p className='text-sm'>
-                <span className='text-muted-foreground'>Date:</span>{' '}
+                <span className='text-muted-foreground'>{t('common.date')}:</span>{' '}
                 <span className='font-medium'>{appointmentDate}</span>
               </p>
             )}
@@ -117,15 +126,15 @@ export function BillingModal({
 
         <Form form={form} onSubmit={form.handleSubmit(handleSubmit)} className='space-y-6'>
           <div className='space-y-4'>
-            <h4 className='text-sm font-semibold'>Payment Information</h4>
+            <h4 className='text-sm font-semibold'>{t('common.payment_info')}</h4>
             
             <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
               <FormInput
                 control={form.control}
                 name='totalAmount'
-                label='Total Amount'
+                label={t('common.total')}
                 type='number'
-                placeholder='Enter total amount'
+                placeholder={t('common.enter_total_amount')}
                 required
                 min='0.01'
                 step='0.01'
@@ -134,9 +143,9 @@ export function BillingModal({
               <FormInput
                 control={form.control}
                 name='paidAmount'
-                label='Paid Amount'
+                label={t('common.paid_amount')}
                 type='number'
-                placeholder='Enter paid amount'
+                placeholder={t('common.enter_paid_amount')}
                 required
                 min='0'
                 step='0.01'
@@ -145,20 +154,15 @@ export function BillingModal({
               <FormSelect
                 control={form.control}
                 name='paymentMethod'
-                label='Payment Method'
+                label={t('common.payment_method')}
                 required
-                options={[
-                  { label: 'Cash', value: 'Cash' },
-                  { label: 'Card', value: 'Card' },
-                  { label: 'Bank Transfer', value: 'Bank Transfer' },
-                  { label: 'Insurance', value: 'Insurance' }
-                ]}
+                options={paymentMethodOptions}
               />
               
               <FormInput
                 control={form.control}
                 name='discount'
-                label='Discount (Optional)'
+                label={t('common.discount')}
                 type='number'
                 placeholder='0'
                 min='0'
@@ -169,8 +173,8 @@ export function BillingModal({
             <FormTextarea
               control={form.control}
               name='billItems'
-              label='Bill Items (Optional)'
-              placeholder='Format: Description | Quantity | Unit Price | Amount (one per line)&#10;Example: Consultation | 1 | 500 | 500'
+              label={t('common.bill_items_optional')}
+              placeholder={t('common.bill_items_placeholder')}
               config={{
                 maxLength: 1000,
                 showCharCount: true,
@@ -186,10 +190,10 @@ export function BillingModal({
               onClick={handleClose}
               disabled={loading}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type='submit' disabled={loading}>
-              {loading ? 'Processing...' : 'Complete & Create Bill'}
+              {loading ? t('common.processing') : t('common.complete_and_create_bill')}
             </Button>
           </DialogFooter>
         </Form>
@@ -197,4 +201,3 @@ export function BillingModal({
     </Dialog>
   );
 }
-

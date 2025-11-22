@@ -10,16 +10,18 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Facility } from '@/types/facility';
-import { IconEdit, IconDotsVertical, IconTrash } from '@tabler/icons-react';
+import { Edit, MoreVertical, Trash } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useI18n } from '@/providers/i18n-provider';
 
 interface CellActionProps {
   data: Facility;
 }
 
 export const CellAction: React.FC<CellActionProps> = ({ data }) => {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -34,13 +36,13 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
       const result = await response.json();
 
       if (result.success) {
-        toast.success('Facility deleted successfully');
+        toast.success(t('common.facility_deleted'));
         router.refresh();
       } else {
-        toast.error(result.message || 'Failed to delete facility');
+        toast.error(result.message || t('common.error'));
       }
     } catch (error) {
-      toast.error('Something went wrong');
+      toast.error(t('common.error'));
     } finally {
       setLoading(false);
       setOpen(false);
@@ -54,24 +56,28 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
         onClose={() => setOpen(false)}
         onConfirm={onConfirm}
         loading={loading}
+        title={t('common.delete_confirmation_title')}
+        description={t('common.delete_confirmation_desc')}
+        confirmText={t('common.continue')}
+        cancelText={t('common.cancel')}
       />
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button variant='ghost' className='h-8 w-8 p-0'>
-            <span className='sr-only'>Open menu</span>
-            <IconDotsVertical className='h-4 w-4' />
+            <span className='sr-only'>{t('common.open_menu')}</span>
+            <MoreVertical className='h-4 w-4' />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end'>
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuLabel>{t('common.actions')}</DropdownMenuLabel>
 
           <DropdownMenuItem
             onClick={() => router.push(`/dashboard/facilities/${data._id}`)}
           >
-            <IconEdit className='mr-2 h-4 w-4' /> Update
+            <Edit className='mr-2 h-4 w-4' /> {t('common.update')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setOpen(true)}>
-            <IconTrash className='mr-2 h-4 w-4' /> Delete
+            <Trash className='mr-2 h-4 w-4' /> {t('common.delete')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

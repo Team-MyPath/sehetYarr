@@ -22,10 +22,10 @@ function getStatusColor(status: Bill['status']) {
   }
 }
 
-export const columns: ColumnDef<Bill>[] = [
+export const getColumns = (t: any): ColumnDef<Bill>[] => [
   {
     accessorKey: 'patientId',
-    header: 'Patient',
+    header: t('common.patient_name'),
     cell: ({ row }) => {
       const patient = row.getValue('patientId') as Bill['patientId'];
       return (
@@ -37,7 +37,7 @@ export const columns: ColumnDef<Bill>[] = [
   },
   {
     accessorKey: 'hospitalId',
-    header: 'Hospital',
+    header: t('common.hospital_name'),
     cell: ({ row }) => {
       const hospital = row.getValue('hospitalId') as Bill['hospitalId'];
       return (
@@ -49,7 +49,7 @@ export const columns: ColumnDef<Bill>[] = [
   },
   {
     accessorKey: 'doctorId',
-    header: 'Doctor',
+    header: t('common.doctor_name'),
     cell: ({ row }) => {
       const doctor = row.getValue('doctorId') as Bill['doctorId'];
       return (
@@ -62,7 +62,7 @@ export const columns: ColumnDef<Bill>[] = [
   {
     accessorKey: 'billDate',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Bill Date' />
+      <DataTableColumnHeader column={column} title={t('common.bill_date')} />
     ),
     cell: ({ row }) => {
       const date = row.getValue('billDate') as string;
@@ -78,7 +78,7 @@ export const columns: ColumnDef<Bill>[] = [
   {
     accessorKey: 'totalAmount',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Total Amount' />
+      <DataTableColumnHeader column={column} title={t('common.total')} />
     ),
     cell: ({ row }) => {
       const amount = row.getValue('totalAmount') as number;
@@ -92,7 +92,7 @@ export const columns: ColumnDef<Bill>[] = [
   {
     accessorKey: 'paidAmount',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Paid Amount' />
+      <DataTableColumnHeader column={column} title={t('common.paid_amount')} />
     ),
     cell: ({ row }) => {
       const paid = row.getValue('paidAmount') as number;
@@ -106,7 +106,7 @@ export const columns: ColumnDef<Bill>[] = [
   {
     accessorKey: 'status',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Status' />
+      <DataTableColumnHeader column={column} title={t('common.status')} />
     ),
     cell: ({ row }) => {
       const status = row.getValue('status') as Bill['status'];
@@ -122,7 +122,7 @@ export const columns: ColumnDef<Bill>[] = [
   },
   {
     accessorKey: 'paymentMethod',
-    header: 'Payment Method',
+    header: t('common.payment_method'),
     cell: ({ row }) => {
       const method = row.getValue('paymentMethod') as Bill['paymentMethod'];
       return (

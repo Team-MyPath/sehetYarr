@@ -4,7 +4,6 @@ import { DataTableColumnHeader } from '@/components/ui/table/data-table-column-h
 import { Hospital } from '@/types/hospital';
 import { ColumnDef } from '@tanstack/react-table';
 import { CellAction } from './cell-action';
-import { IconBuilding, IconBuildingCommunity } from '@tabler/icons-react';
 
 const HOSPITAL_TYPE_OPTIONS = [
   { label: 'Hospital', value: 'hospital' },
@@ -21,11 +20,11 @@ const OWNERSHIP_TYPE_OPTIONS = [
   { label: 'NGO', value: 'ngo' }
 ];
 
-export const columns: ColumnDef<Hospital>[] = [
+export const getColumns = (t: any): ColumnDef<Hospital>[] => [
   {
     accessorKey: 'name',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Hospital Name' />
+      <DataTableColumnHeader column={column} title={t('common.hospital_name')} />
     ),
     cell: ({ row }) => {
       return (
@@ -37,15 +36,15 @@ export const columns: ColumnDef<Hospital>[] = [
       );
     },
     meta: {
-      label: 'Search by name',
-      placeholder: 'Hospital name...',
+      label: t('common.search'),
+      placeholder: t('common.hospital_name'),
       variant: 'text'
     }
   },
   {
     accessorKey: 'type',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Type' />
+      <DataTableColumnHeader column={column} title={t('common.type')} />
     ),
     cell: ({ row }) => {
       const type = row.getValue('type') as string;
@@ -56,8 +55,8 @@ export const columns: ColumnDef<Hospital>[] = [
       );
     },
     meta: {
-      label: 'Type',
-      placeholder: 'Filter by type',
+      label: t('common.type'),
+      placeholder: t('common.select_type'),
       variant: 'multiSelect',
       options: HOSPITAL_TYPE_OPTIONS
     },
@@ -68,7 +67,7 @@ export const columns: ColumnDef<Hospital>[] = [
   {
     accessorKey: 'ownershipType',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Ownership' />
+      <DataTableColumnHeader column={column} title='Ownership' /> // Need key
     ),
     cell: ({ row }) => {
       const ownership = row.getValue('ownershipType') as string;
@@ -79,7 +78,7 @@ export const columns: ColumnDef<Hospital>[] = [
       );
     },
     meta: {
-      label: 'Ownership Type',
+      label: 'Ownership Type', // Need key
       placeholder: 'Filter by ownership',
       variant: 'multiSelect',
       options: OWNERSHIP_TYPE_OPTIONS
@@ -90,7 +89,7 @@ export const columns: ColumnDef<Hospital>[] = [
   },
   {
     accessorKey: 'location',
-    header: 'Location',
+    header: t('common.location'),
     cell: ({ row }) => {
       const location = row.getValue('location') as Hospital['location'];
       if (!location) return <span className='text-muted-foreground'>-</span>;
@@ -105,7 +104,7 @@ export const columns: ColumnDef<Hospital>[] = [
   },
   {
     accessorKey: 'contact',
-    header: 'Contact',
+    header: t('common.contact'),
     cell: ({ row }) => {
       const contact = row.getValue('contact') as Hospital['contact'];
       return (
@@ -117,7 +116,7 @@ export const columns: ColumnDef<Hospital>[] = [
   },
   {
     accessorKey: 'registrationNumber',
-    header: 'Registration No',
+    header: 'Registration No', // Need key
     cell: ({ row }) => {
       return (
         <div className='font-mono text-sm'>

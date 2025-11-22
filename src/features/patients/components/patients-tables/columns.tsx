@@ -23,11 +23,11 @@ const BLOOD_GROUP_OPTIONS = [
   { label: 'AB-', value: 'AB-' }
 ];
 
-export const columns: ColumnDef<Patient>[] = [
+export const getColumns = (t: any): ColumnDef<Patient>[] => [
   {
     accessorKey: 'name',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Patient Name' />
+      <DataTableColumnHeader column={column} title={t('common.patient_name')} />
     ),
     cell: ({ row }) => {
       return (
@@ -39,14 +39,14 @@ export const columns: ColumnDef<Patient>[] = [
       );
     },
     meta: {
-      label: 'Search by name',
-      placeholder: 'Patient name...',
+      label: t('common.search'),
+      placeholder: t('common.patient_name'),
       variant: 'text'
     }
   },
   {
     accessorKey: 'cnic',
-    header: 'CNIC',
+    header: t('common.cnic'),
     cell: ({ row }) => {
       return (
         <div className='font-mono text-sm'>
@@ -58,7 +58,7 @@ export const columns: ColumnDef<Patient>[] = [
   {
     accessorKey: 'gender',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Gender' />
+      <DataTableColumnHeader column={column} title={t('common.gender')} />
     ),
     cell: ({ row }) => {
       const gender = row.getValue('gender') as string;
@@ -69,8 +69,8 @@ export const columns: ColumnDef<Patient>[] = [
       );
     },
     meta: {
-      label: 'Gender',
-      placeholder: 'Filter by gender',
+      label: t('common.gender'),
+      placeholder: t('common.filter_by_gender') || 'Filter by gender',
       variant: 'multiSelect',
       options: GENDER_OPTIONS
     },
@@ -81,7 +81,7 @@ export const columns: ColumnDef<Patient>[] = [
   {
     accessorKey: 'bloodGroup',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Blood Group' />
+      <DataTableColumnHeader column={column} title={t('common.blood_group')} />
     ),
     cell: ({ row }) => {
       const bloodGroup = row.getValue('bloodGroup') as string;
@@ -92,8 +92,8 @@ export const columns: ColumnDef<Patient>[] = [
       );
     },
     meta: {
-      label: 'Blood Group',
-      placeholder: 'Filter by blood group',
+      label: t('common.blood_group'),
+      placeholder: t('common.filter_by_blood_group') || 'Filter by blood group',
       variant: 'multiSelect',
       options: BLOOD_GROUP_OPTIONS
     },
@@ -103,7 +103,7 @@ export const columns: ColumnDef<Patient>[] = [
   },
   {
     accessorKey: 'dateOfBirth',
-    header: 'Date of Birth',
+    header: t('common.dob'),
     cell: ({ row }) => {
       const dob = row.getValue('dateOfBirth') as string;
       return (
@@ -115,7 +115,7 @@ export const columns: ColumnDef<Patient>[] = [
   },
   {
     accessorKey: 'contact',
-    header: 'Contact',
+    header: t('common.contact'),
     cell: ({ row }) => {
       const contact = row.getValue('contact') as Patient['contact'];
       return (

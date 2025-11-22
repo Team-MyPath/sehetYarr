@@ -26,19 +26,6 @@ export default async function Page(props: pageProps) {
   return (
     <PageContainer scrollable={false}>
       <div className='flex flex-1 flex-col space-y-4'>
-        <div className='flex items-start justify-between'>
-          <Heading
-            title='Workers'
-            description='Manage hospital staff and healthcare workers.'
-          />
-          <Link
-            href='/dashboard/workers/new'
-            className={cn(buttonVariants(), 'text-xs md:text-sm')}
-          >
-            <IconPlus className='mr-2 h-4 w-4' /> Add New
-          </Link>
-        </div>
-        <Separator />
         <Suspense
           fallback={
             <DataTableSkeleton columnCount={8} rowCount={8} filterCount={1} />

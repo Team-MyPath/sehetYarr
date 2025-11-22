@@ -16,6 +16,8 @@ import { toast } from 'sonner';
 import * as z from 'zod';
 import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
+import { useI18n } from '@/providers/i18n-provider';
+import { submitWithOfflineSupport } from '@/lib/offline/form-submission';
 
 const statusOptions = [
   { label: 'Pending', value: 'Pending' },
@@ -51,6 +53,7 @@ export default function BillForm({
   initialData: Bill | null;
   pageTitle: string;
 }) {
+  const { t } = useI18n();
   const [patients, setPatients] = useState<SearchableSelectOption[]>([]);
   const [doctors, setDoctors] = useState<SearchableSelectOption[]>([]);
   const [hospitals, setHospitals] = useState<Array<{ label: string; value: string }>>([]);
@@ -79,7 +82,7 @@ export default function BillForm({
           setPatients(patientsData.data.map((p: any) => ({
             label: p.name,
             value: p._id,
-            subtitle: `CNIC: ${p.cnic || 'N/A'}`,
+            subtitle: `${t('common.cnic')}: ${p.cnic || 'N/A'}`,
             searchText: `${p.name} ${p.cnic || ''}`
           })));
         }
@@ -88,7 +91,7 @@ export default function BillForm({
           setDoctors(doctorsData.data.map((d: any) => ({
             label: d.name,
             value: d._id,
-            subtitle: `CNIC: ${d.cnic || 'N/A'}`,
+            subtitle: `${t('common.cnic')}: ${d.cnic || 'N/A'}`,
             searchText: `${d.name} ${d.cnic || ''}`
           })));
         }
@@ -97,7 +100,6 @@ export default function BillForm({
           const hospitalsList = hospitalsData.data.map((h: any) => ({ label: h.name, value: h._id }));
           setHospitals(hospitalsList);
 
-          // If user is hospital role, auto-fill with their hospital
           if (isHospitalUser && userData?.success && userData.data.hospital) {
             const hospitalId = userData.data.hospital._id;
             setUserHospitalId(hospitalId);
@@ -111,7 +113,7 @@ export default function BillForm({
       }
     };
     fetchData();
-  }, [isHospitalUser, initialData]);
+  }, [isHospitalUser, initialData, t]);
 
   const formatItems = (items?: Bill['items']) => {
     if (!items || items.length === 0) return '';
@@ -173,9 +175,6 @@ export default function BillForm({
         : '/api/bills';
       const method = initialData ? 'PUT' : 'POST';
 
-      // Import offline submission utility
-      const { submitWithOfflineSupport } = await import('@/lib/offline/form-submission');
-
       const result = await submitWithOfflineSupport(
         'bills',
         payload,
@@ -202,7 +201,9 @@ export default function BillForm({
   return (
     <Card className='mx-auto w-full'>
       <CardHeader>
-        <CardTitle className='text-left text-2xl font-bold'>{pageTitle}</CardTitle>
+        <CardTitle className='text-left text-2xl font-bold'>
+          {initialData ? t('common.edit') : t('common.create_new')} {t('common.billing')}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <Form form={form} onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
@@ -210,16 +211,16 @@ export default function BillForm({
             <FormSearchableSelect 
               control={form.control} 
               name='patientId' 
-              label='Patient' 
-              placeholder='Search patient...' 
+              label={t('common.patient_name')} 
+              placeholder={t('common.select_patient')}
               required 
               options={patients} 
             />
             <FormSelect 
               control={form.control} 
               name='hospitalId' 
-              label='Hospital' 
-              placeholder='Select hospital' 
+              label={t('common.hospital_name')} 
+              placeholder={t('common.select_type')}
               required 
               options={hospitals}
               disabled={isHospitalUser}
@@ -227,35 +228,39 @@ export default function BillForm({
             <FormSearchableSelect 
               control={form.control} 
               name='doctorId' 
-              label='Doctor (Optional)' 
-              placeholder='Search doctor...' 
+              label={t('common.doctor_name') + ' (' + t('common.optional') + ')'} // generic optional? I don't have optional key.
+              placeholder={t('common.select_doctor')} 
               options={doctors} 
             />
           </div>
 
           <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
-            <FormDatePicker control={form.control} name='billDate' label='Bill Date' required />
-            <FormSelect control={form.control} name='status' label='Status' placeholder='Select status' required options={statusOptions} />
+            <FormDatePicker control={form.control} name='billDate' label={t('common.bill_date')} required />
+            <FormSelect control={form.control} name='status' label={t('common.status')} placeholder='Select status' required options={statusOptions} />
           </div>
 
           <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
-            <FormInput control={form.control} name='totalAmount' label='Total Amount (Rs.)' placeholder='0.00' required type='number' />
-            <FormInput control={form.control} name='paidAmount' label='Paid Amount (Rs.)' placeholder='0.00' required type='number' />
-            <FormInput control={form.control} name='discount' label='Discount (Rs.)' placeholder='0.00' type='number' />
+            <FormInput control={form.control} name='totalAmount' label={t('common.total')} placeholder='0.00' required type='number' />
+            <FormInput control={form.control} name='paidAmount' label={t('common.paid_amount')} placeholder='0.00' required type='number' />
+            <FormInput control={form.control} name='discount' label={t('common.discount')} placeholder='0.00' type='number' />
           </div>
 
-          <FormSelect control={form.control} name='paymentMethod' label='Payment Method' placeholder='Select payment method' required options={paymentMethodOptions} />
+          <FormSelect control={form.control} name='paymentMethod' label={t('common.payment_method')} placeholder='Select payment method' required options={paymentMethodOptions} />
 
           <FormTextarea
             control={form.control}
             name='items'
-            label='Bill Items'
+            label={t('common.items')}
             placeholder='One per line: Description | Quantity | Unit Price | Amount&#10;Example: Consultation | 1 | 2000 | 2000&#10;Lab Test | 1 | 1500 | 1500'
             config={{ rows: 6, maxLength: 2000, showCharCount: true }}
           />
 
           <Button type='submit' disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? 'Saving...' : initialData ? 'Update Bill' : 'Create Bill'}
+            {form.formState.isSubmitting 
+              ? t('common.saving') 
+              : initialData 
+                ? t('common.update') 
+                : t('common.create')}
           </Button>
         </Form>
       </CardContent>

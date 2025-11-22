@@ -32,6 +32,7 @@ import { UserAvatarProfile } from '@/components/user-avatar-profile';
 import { navItems } from '@/constants/data';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useOfflineAuth } from '@/hooks/use-offline-auth';
+import { useI18n } from '@/providers/i18n-provider';
 import {
   IconBell,
   IconChevronRight,
@@ -111,6 +112,7 @@ export default function AppSidebar() {
   const pathname = usePathname();
   const { isOpen } = useMediaQuery();
   const { user, isLoaded } = useOfflineAuth();
+  const { t, dir } = useI18n();
   const router = useRouter();
   const handleSwitchTenant = (_tenantId: string) => {
     // Tenant switching functionality would be implemented here
@@ -130,13 +132,31 @@ export default function AppSidebar() {
     const role = (user.publicMetadata?.role as string) || 'patient';
     const allowedRoutes = roleAccessMap[role] || roleAccessMap.patient;
 
-    if (allowedRoutes[0] === '*') return navItems;
+    const items = allowedRoutes[0] === '*' 
+      ? navItems 
+      : navItems.filter((item) => allowedRoutes.includes(item.url));
 
-    return navItems.filter((item) => allowedRoutes.includes(item.url));
-  }, [isLoaded, user]);
+    // Translate items
+    return items.map(item => {
+      // Helper to convert title to key (e.g., "Medical Records" -> "medical_records")
+      const key = item.title.toLowerCase().replace(/\s+/g, '_');
+      
+      return {
+        ...item,
+        title: t(`common.${key}`),
+        items: item.items?.map(subItem => {
+          const subKey = subItem.title.toLowerCase().replace(/\s+/g, '_');
+          return {
+            ...subItem,
+            title: t(`common.${subKey}`)
+          };
+        })
+      };
+    });
+  }, [isLoaded, user, t]);
 
   return (
-    <Sidebar collapsible='icon'>
+    <Sidebar collapsible='icon' side={dir === 'rtl' ? 'right' : 'left'}>
       <SidebarHeader>
         <OrgSwitcher
           tenants={tenants}
@@ -247,7 +267,7 @@ export default function AppSidebar() {
                     onClick={() => router.push('/dashboard/profile')}
                   >
                     <IconUserCircle className='mr-2 h-4 w-4' />
-                    Profile
+                    {t('common.profile')}
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />

@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import * as z from 'zod';
 import { useEffect, useState } from 'react';
 import { submitWithOfflineSupport } from '@/lib/offline/form-submission';
+import { useI18n } from '@/providers/i18n-provider';
 
 const wardTypeOptions = [
   { label: 'VIP', value: 'VIP' },
@@ -41,6 +42,7 @@ export default function CapacityForm({
   initialData: Capacity | null;
   pageTitle: string;
 }) {
+  const { t } = useI18n();
   const [hospitals, setHospitals] = useState<Array<{ label: string; value: string }>>([]);
 
   useEffect(() => {
@@ -81,7 +83,7 @@ export default function CapacityForm({
       const occupiedBeds = parseInt(values.occupiedBeds);
       
       if (occupiedBeds > totalBeds) {
-        toast.error('Occupied beds cannot be greater than total beds');
+        toast.error(t('common.occupied_beds_error'));
         return;
       }
 
@@ -117,7 +119,7 @@ export default function CapacityForm({
         }
       );
     } catch (error) {
-      toast.error('Failed to save capacity');
+      toast.error(t('common.failed_to_save_capacity'));
     }
   }
 
@@ -130,50 +132,62 @@ export default function CapacityForm({
     ? ((parseInt(watchOccupiedBeds) / parseInt(watchTotalBeds)) * 100).toFixed(1)
     : '0.0';
 
+  const localizedWardTypeOptions = [
+    { label: t('common.vip'), value: 'VIP' },
+    { label: t('common.normal'), value: 'Normal' },
+    { label: t('common.emergency'), value: 'Emergency' },
+    { label: t('common.icu'), value: 'ICU' },
+    { label: t('common.maternity'), value: 'Maternity' },
+    { label: t('common.pediatrics'), value: 'Pediatrics' },
+    { label: t('common.other'), value: 'Other' }
+  ];
+
   return (
     <Card className='mx-auto w-full'>
       <CardHeader>
-        <CardTitle className='text-left text-2xl font-bold'>{pageTitle}</CardTitle>
+        <CardTitle className='text-left text-2xl font-bold'>
+          {initialData ? t('common.update') + ' ' + t('common.capacity') : t('common.create') + ' ' + t('common.capacity')}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <Form form={form} onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
           <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
-            <FormSelect control={form.control} name='hospitalId' label='Hospital' placeholder='Select hospital' required options={hospitals} />
-            <FormSelect control={form.control} name='wardType' label='Ward Type' placeholder='Select ward type' required options={wardTypeOptions} />
+            <FormSelect control={form.control} name='hospitalId' label={t('common.hospital')} placeholder={t('common.select_hospital')} required options={hospitals} />
+            <FormSelect control={form.control} name='wardType' label={t('common.ward_type')} placeholder={t('common.select_ward_type')} required options={localizedWardTypeOptions} />
           </div>
 
           <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
-            <FormInput control={form.control} name='totalBeds' label='Total Beds' placeholder='0' required type='number' />
-            <FormInput control={form.control} name='occupiedBeds' label='Occupied Beds' placeholder='0' required type='number' />
+            <FormInput control={form.control} name='totalBeds' label={t('common.total_beds')} placeholder='0' required type='number' />
+            <FormInput control={form.control} name='occupiedBeds' label={t('common.occupied_beds')} placeholder='0' required type='number' />
           </div>
 
           {watchTotalBeds && watchOccupiedBeds && (
             <div className='rounded-lg border bg-muted/50 p-4'>
               <div className='grid grid-cols-2 gap-4'>
                 <div>
-                  <p className='text-sm text-muted-foreground'>Available Beds</p>
+                  <p className='text-sm text-muted-foreground'>{t('common.available_beds')}</p>
                   <p className='text-2xl font-bold'>{availableBeds}</p>
                 </div>
                 <div>
-                  <p className='text-sm text-muted-foreground'>Occupancy Rate</p>
+                  <p className='text-sm text-muted-foreground'>{t('common.occupancy_rate')}</p>
                   <p className='text-2xl font-bold'>{occupancyRate}%</p>
                 </div>
               </div>
             </div>
           )}
 
-          <FormInput control={form.control} name='equipmentIds' label='Equipment IDs' placeholder='Comma separated facility/equipment IDs' />
+          <FormInput control={form.control} name='equipmentIds' label={t('common.equipment_ids')} placeholder={t('common.comma_separated_equipment_ids')} />
 
           <FormTextarea
             control={form.control}
             name='notes'
-            label='Notes'
-            placeholder='Additional notes about this ward capacity'
+            label={t('common.notes')}
+            placeholder={t('common.additional_notes')}
             config={{ rows: 4, maxLength: 500, showCharCount: true }}
           />
 
           <Button type='submit' disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? 'Saving...' : initialData ? 'Update Capacity' : 'Create Capacity'}
+            {form.formState.isSubmitting ? t('common.saving') : initialData ? t('common.update_capacity') : t('common.create_capacity')}
           </Button>
         </Form>
       </CardContent>

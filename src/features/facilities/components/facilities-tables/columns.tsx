@@ -32,11 +32,11 @@ function getCategoryColor(category: Facility['category']) {
   }
 }
 
-export const columns: ColumnDef<Facility>[] = [
+export const getColumns = (t: any): ColumnDef<Facility>[] => [
   {
     accessorKey: 'name',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Name' />
+      <DataTableColumnHeader column={column} title={t('common.name')} />
     ),
     cell: ({ row }) => {
       return (
@@ -48,7 +48,7 @@ export const columns: ColumnDef<Facility>[] = [
   },
   {
     accessorKey: 'hospitalId',
-    header: 'Hospital',
+    header: t('common.hospital'),
     cell: ({ row }) => {
       const hospital = row.getValue('hospitalId') as Facility['hospitalId'];
       return (
@@ -61,7 +61,7 @@ export const columns: ColumnDef<Facility>[] = [
   {
     accessorKey: 'category',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Category' />
+      <DataTableColumnHeader column={column} title={t('common.category')} />
     ),
     cell: ({ row }) => {
       const category = row.getValue('category') as Facility['category'];
@@ -78,7 +78,7 @@ export const columns: ColumnDef<Facility>[] = [
   {
     accessorKey: 'quantity',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Quantity' />
+      <DataTableColumnHeader column={column} title={t('common.quantity')} />
     ),
     cell: ({ row }) => {
       const quantity = row.getValue('quantity') as number;
@@ -88,7 +88,7 @@ export const columns: ColumnDef<Facility>[] = [
   {
     accessorKey: 'inUse',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='In Use' />
+      <DataTableColumnHeader column={column} title={t('common.in_use')} />
     ),
     cell: ({ row }) => {
       const inUse = row.getValue('inUse') as number;
@@ -97,7 +97,7 @@ export const columns: ColumnDef<Facility>[] = [
   },
   {
     id: 'available',
-    header: 'Available',
+    header: t('common.available'),
     cell: ({ row }) => {
       const quantity = row.getValue('quantity') as number;
       const inUse = (row.getValue('inUse') as number) || 0;
@@ -112,7 +112,7 @@ export const columns: ColumnDef<Facility>[] = [
   {
     accessorKey: 'status',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Status' />
+      <DataTableColumnHeader column={column} title={t('common.status')} />
     ),
     cell: ({ row }) => {
       const status = row.getValue('status') as Facility['status'];
