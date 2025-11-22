@@ -20,18 +20,21 @@ import { useI18n } from '@/providers/i18n-provider';
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   cnic: z.string().min(13, { message: 'CNIC must be 13 characters.' }),
-  cnicIV: z.string().min(1, { message: 'CNIC IV is required.' }),
   gender: z.enum(['male', 'female', 'other']),
   dateOfBirth: z.date(),
   bloodGroup: z.enum(['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']).optional(),
-  'contact.primaryNumber': z.string().optional(),
-  'contact.secondaryNumber': z.string().optional(),
-  'contact.address': z.string().optional(),
-  'contact.city': z.string().optional(),
-  'contact.state': z.string().optional(),
-  'emergencyContact.name': z.string().optional(),
-  'emergencyContact.relation': z.string().optional(),
-  'emergencyContact.phoneNo': z.string().optional()
+  contact: z.object({
+    primaryNumber: z.string().optional(),
+    secondaryNumber: z.string().optional(),
+    address: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional()
+  }).optional(),
+  emergencyContact: z.object({
+    name: z.string().optional(),
+    relation: z.string().optional(),
+    phoneNo: z.string().optional()
+  }).optional()
 });
 
 export default function PatientForm({
@@ -45,18 +48,21 @@ export default function PatientForm({
   const defaultValues = {
     name: initialData?.name || '',
     cnic: initialData?.cnic || '',
-    cnicIV: initialData?.cnicIV || '',
     gender: initialData?.gender || ('male' as const),
     dateOfBirth: initialData?.dateOfBirth ? new Date(initialData.dateOfBirth) : undefined,
     bloodGroup: initialData?.bloodGroup,
-    'contact.primaryNumber': initialData?.contact?.primaryNumber || '',
-    'contact.secondaryNumber': initialData?.contact?.secondaryNumber || '',
-    'contact.address': initialData?.contact?.address || '',
-    'contact.city': initialData?.contact?.city || '',
-    'contact.state': initialData?.contact?.state || '',
-    'emergencyContact.name': initialData?.emergencyContact?.name || '',
-    'emergencyContact.relation': initialData?.emergencyContact?.relation || '',
-    'emergencyContact.phoneNo': initialData?.emergencyContact?.phoneNo || ''
+    contact: {
+      primaryNumber: initialData?.contact?.primaryNumber || '',
+      secondaryNumber: initialData?.contact?.secondaryNumber || '',
+      address: initialData?.contact?.address || '',
+      city: initialData?.contact?.city || '',
+      state: initialData?.contact?.state || ''
+    },
+    emergencyContact: {
+      name: initialData?.emergencyContact?.name || '',
+      relation: initialData?.emergencyContact?.relation || '',
+      phoneNo: initialData?.emergencyContact?.phoneNo || ''
+    }
   };
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -86,18 +92,25 @@ export default function PatientForm({
               
               // Auto-fill fields
               form.setValue('name', match.name);
-              form.setValue('cnicIV', match.cnicIV);
               form.setValue('gender', match.gender);
               if (match.dateOfBirth) form.setValue('dateOfBirth', new Date(match.dateOfBirth));
               if (match.bloodGroup) form.setValue('bloodGroup', match.bloodGroup);
-              if (match.contact?.primaryNumber) form.setValue('contact.primaryNumber' as any, match.contact.primaryNumber);
-              if (match.contact?.secondaryNumber) form.setValue('contact.secondaryNumber' as any, match.contact.secondaryNumber);
-              if (match.contact?.address) form.setValue('contact.address' as any, match.contact.address);
-              if (match.contact?.city) form.setValue('contact.city' as any, match.contact.city);
-              if (match.contact?.state) form.setValue('contact.state' as any, match.contact.state);
-              if (match.emergencyContact?.name) form.setValue('emergencyContact.name' as any, match.emergencyContact.name);
-              if (match.emergencyContact?.relation) form.setValue('emergencyContact.relation' as any, match.emergencyContact.relation);
-              if (match.emergencyContact?.phoneNo) form.setValue('emergencyContact.phoneNo' as any, match.emergencyContact.phoneNo);
+              if (match.contact) {
+                form.setValue('contact', {
+                  primaryNumber: match.contact.primaryNumber || '',
+                  secondaryNumber: match.contact.secondaryNumber || '',
+                  address: match.contact.address || '',
+                  city: match.contact.city || '',
+                  state: match.contact.state || ''
+                });
+              }
+              if (match.emergencyContact) {
+                form.setValue('emergencyContact', {
+                  name: match.emergencyContact.name || '',
+                  relation: match.emergencyContact.relation || '',
+                  phoneNo: match.emergencyContact.phoneNo || ''
+                });
+              }
             } else {
               setExistingPatient(null);
             }
@@ -120,26 +133,57 @@ export default function PatientForm({
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const payload = {
-        name: values.name,
-        cnic: values.cnic,
-        cnicIV: values.cnicIV,
+      console.log('Form values received:', values);
+      console.log('Contact object:', values.contact);
+      console.log('EmergencyContact object:', values.emergencyContact);
+
+      // Build contact object - clean and trim values
+      const contact: any = {};
+      if (values.contact) {
+        contact.primaryNumber = values.contact.primaryNumber?.trim() || '';
+        contact.secondaryNumber = values.contact.secondaryNumber?.trim() || '';
+        contact.address = values.contact.address?.trim() || '';
+        contact.city = values.contact.city?.trim() || '';
+        contact.state = values.contact.state?.trim() || '';
+      }
+
+      console.log('Built contact object:', contact);
+
+      // Build emergency contact object - clean and trim values
+      const emergencyContact: any = {};
+      if (values.emergencyContact) {
+        emergencyContact.name = values.emergencyContact.name?.trim() || '';
+        emergencyContact.relation = values.emergencyContact.relation?.trim() || '';
+        emergencyContact.phoneNo = values.emergencyContact.phoneNo?.trim() || '';
+      }
+
+      console.log('Built emergencyContact object:', emergencyContact);
+
+      // Validate dateOfBirth
+      if (!values.dateOfBirth || !(values.dateOfBirth instanceof Date) || isNaN(values.dateOfBirth.getTime())) {
+        toast.error('Please select a valid date of birth');
+        return;
+      }
+
+      const payload: any = {
+        name: values.name.trim(),
+        cnic: values.cnic.trim(),
         gender: values.gender,
         dateOfBirth: values.dateOfBirth.toISOString(),
-        bloodGroup: values.bloodGroup,
-        contact: {
-          primaryNumber: values['contact.primaryNumber'],
-          secondaryNumber: values['contact.secondaryNumber'],
-          address: values['contact.address'],
-          city: values['contact.city'],
-          state: values['contact.state']
-        },
-        emergencyContact: {
-          name: values['emergencyContact.name'],
-          relation: values['emergencyContact.relation'],
-          phoneNo: values['emergencyContact.phoneNo']
-        }
       };
+
+      // Only include bloodGroup if it's provided
+      if (values.bloodGroup) {
+        payload.bloodGroup = values.bloodGroup;
+      }
+
+      // Always include contact object (even if empty)
+      payload.contact = contact;
+
+      // Always include emergencyContact object (even if empty)
+      payload.emergencyContact = emergencyContact;
+
+      console.log('Final payload being sent:', JSON.stringify(payload, null, 2));
 
       const url = initialData
         ? `/api/patients/${initialData._id}`
@@ -156,7 +200,8 @@ export default function PatientForm({
           apiEndpoint: url,
           method,
           id: initialData?._id,
-          onSuccess: () => {
+          onSuccess: (responseData?: any) => {
+            // Navigate to patients list
             router.push('/dashboard/patients');
             router.refresh();
           },
@@ -165,7 +210,9 @@ export default function PatientForm({
 
       if (!result.success) {
         console.error('Patient submission failed:', result.error);
+        toast.error(result.error || 'Failed to save patient');
       }
+      // Note: Success messages (including "already linked") are handled by submitWithOfflineSupport
     } catch (error) {
       toast.error('Failed to save patient');
       console.error('Patient form error:', error);
@@ -217,15 +264,6 @@ export default function PatientForm({
               placeholder={t('common.enter_name')} 
               required 
               disabled={!!existingPatient?.name}
-            />
-            
-            <FormInput 
-              control={form.control} 
-              name='cnicIV' 
-              label='CNIC IV' 
-              placeholder={t('common.enter_cnic_iv')} 
-              required 
-              disabled={!!existingPatient?.cnicIV}
             />
             
             <FormSelect 

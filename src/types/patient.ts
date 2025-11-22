@@ -4,7 +4,6 @@ export interface Patient {
   gender: 'male' | 'female' | 'other';
   dateOfBirth: string;
   cnic: string;
-  cnicIV: string;
   bloodGroup?: 'A+' | 'A-' | 'B+' | 'B-' | 'O+' | 'O-' | 'AB+' | 'AB-';
   contact?: {
     primaryNumber?: string;

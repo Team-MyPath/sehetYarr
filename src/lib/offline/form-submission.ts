@@ -85,15 +85,21 @@ export async function submitWithOfflineSupport(
           // Don't fail the submission if caching fails
         }
 
-        toast.success(
-          method === 'PUT' ? 'Updated successfully' : 'Created successfully'
-        );
+        // Check if there's a custom message from the API
+        if (result.message && result.message.includes('already')) {
+          toast.info(result.message);
+        } else {
+          toast.success(
+            method === 'PUT' ? 'Updated successfully' : 'Created successfully'
+          );
+        }
         
         onSuccess?.(result);
         
         return {
           success: true,
-          data: result.data,
+          data: result.data || result,
+          message: result.message,
           synced: true,
         };
       } else {

@@ -47,14 +47,38 @@ export const PatientSummaryModal: React.FC<PatientSummaryModalProps> = ({
   onClose,
   patient
 }) => {
+  const [fullPatient, setFullPatient] = useState<Patient | null>(null);
   const [records, setRecords] = useState<MedicalRecord[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingPatient, setLoadingPatient] = useState(false);
 
   useEffect(() => {
     if (isOpen && patient._id) {
+      fetchFullPatient();
       fetchMedicalRecords();
     }
   }, [isOpen, patient._id]);
+
+  const fetchFullPatient = async () => {
+    try {
+      setLoadingPatient(true);
+      const response = await fetch(`/api/patients/${patient._id}`);
+      const result = await response.json();
+      if (result.success) {
+        setFullPatient(result.data);
+      } else {
+        console.error('Failed to fetch full patient data:', result.error);
+        // Fallback to the patient data from props
+        setFullPatient(patient);
+      }
+    } catch (error) {
+      console.error('Error fetching full patient data:', error);
+      // Fallback to the patient data from props
+      setFullPatient(patient);
+    } finally {
+      setLoadingPatient(false);
+    }
+  };
 
   const fetchMedicalRecords = async () => {
     try {
@@ -75,11 +99,11 @@ export const PatientSummaryModal: React.FC<PatientSummaryModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0">
+      <DialogContent className="min-w-5xl border border-red-500 max-h-[90vh] flex flex-col p-0 gap-0">
         <DialogHeader className="px-6 py-4 border-b shrink-0">
           <DialogTitle className="text-2xl font-bold flex items-center gap-2">
             <FileText className="h-6 w-6" />
-            Patient Summary: {patient.name}
+            Patient Summary: {fullPatient?.name || patient.name}
           </DialogTitle>
           <DialogDescription>
             Overview of patient details and recent medical history
@@ -88,75 +112,112 @@ export const PatientSummaryModal: React.FC<PatientSummaryModalProps> = ({
 
         <ScrollArea className="flex-1">
           <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Personal Info
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-1">
-                    <p className="text-sm">
-                      <span className="font-semibold">Age:</span>{' '}
-                      {new Date().getFullYear() -
-                        new Date(patient.dateOfBirth).getFullYear()}
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-semibold">Gender:</span> {patient.gender}
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-semibold">Blood Group:</span>{' '}
-                      {patient.bloodGroup || 'N/A'}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+            {loadingPatient ? (
+              <div className="flex items-center justify-center h-40">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Personal Info
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-1">
+                        <p className="text-sm">
+                          <span className="font-semibold">Name:</span>{' '}
+                          {fullPatient?.name || patient.name}
+                        </p>
+                        <p className="text-sm">
+                          <span className="font-semibold">CNIC:</span>{' '}
+                          {fullPatient?.cnic || patient.cnic || 'N/A'}
+                        </p>
+                        {fullPatient?.dateOfBirth || patient.dateOfBirth ? (
+                          <p className="text-sm">
+                            <span className="font-semibold">Age:</span>{' '}
+                            {new Date().getFullYear() -
+                              new Date(fullPatient?.dateOfBirth || patient.dateOfBirth || new Date()).getFullYear()}
+                          </p>
+                        ) : null}
+                        <p className="text-sm">
+                          <span className="font-semibold">Date of Birth:</span>{' '}
+                          {fullPatient?.dateOfBirth || patient.dateOfBirth
+                            ? format(new Date(fullPatient?.dateOfBirth || patient.dateOfBirth || new Date()), 'PPP')
+                            : 'N/A'}
+                        </p>
+                        <p className="text-sm">
+                          <span className="font-semibold">Gender:</span>{' '}
+                          {fullPatient?.gender || patient.gender || 'N/A'}
+                        </p>
+                        <p className="text-sm">
+                          <span className="font-semibold">Blood Group:</span>{' '}
+                          {fullPatient?.bloodGroup || patient.bloodGroup || 'N/A'}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Contact Details
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-1">
-                    <p className="text-sm">
-                      <span className="font-semibold">Phone:</span>{' '}
-                      {patient.contact?.primaryNumber || 'N/A'}
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-semibold">City:</span>{' '}
-                      {patient.contact?.city || 'N/A'}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Contact Details
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-1">
+                        <p className="text-sm">
+                          <span className="font-semibold">Primary Phone:</span>{' '}
+                          {fullPatient?.contact?.primaryNumber || patient.contact?.primaryNumber || 'N/A'}
+                        </p>
+                        <p className="text-sm">
+                          <span className="font-semibold">Secondary Phone:</span>{' '}
+                          {fullPatient?.contact?.secondaryNumber || patient.contact?.secondaryNumber || 'N/A'}
+                        </p>
+                        <p className="text-sm">
+                          <span className="font-semibold">Address:</span>{' '}
+                          {fullPatient?.contact?.address || patient.contact?.address || 'N/A'}
+                        </p>
+                        <p className="text-sm">
+                          <span className="font-semibold">City:</span>{' '}
+                          {fullPatient?.contact?.city || patient.contact?.city || 'N/A'}
+                        </p>
+                        <p className="text-sm">
+                          <span className="font-semibold">State:</span>{' '}
+                          {fullPatient?.contact?.state || patient.contact?.state || 'N/A'}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Emergency Contact
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-1">
-                    <p className="text-sm">
-                      <span className="font-semibold">Name:</span>{' '}
-                      {patient.emergencyContact?.name || 'N/A'}
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-semibold">Relation:</span>{' '}
-                      {patient.emergencyContact?.relation || 'N/A'}
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-semibold">Phone:</span>{' '}
-                      {patient.emergencyContact?.phoneNo || 'N/A'}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Emergency Contact
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-1">
+                        <p className="text-sm">
+                          <span className="font-semibold">Name:</span>{' '}
+                          {fullPatient?.emergencyContact?.name || patient.emergencyContact?.name || 'N/A'}
+                        </p>
+                        <p className="text-sm">
+                          <span className="font-semibold">Relation:</span>{' '}
+                          {fullPatient?.emergencyContact?.relation || patient.emergencyContact?.relation || 'N/A'}
+                        </p>
+                        <p className="text-sm">
+                          <span className="font-semibold">Phone:</span>{' '}
+                          {fullPatient?.emergencyContact?.phoneNo || patient.emergencyContact?.phoneNo || 'N/A'}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </>
+            )}
 
             <Separator />
 

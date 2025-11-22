@@ -2,7 +2,8 @@
 export interface InventoryItem {
   name: string;
   supplier: string;
-  quantity: string;
+  quantity: number;
+  dosage: string; // e.g., "200mg", "50mg"
 }
 
 // Pharmacy location interface
@@ -74,7 +75,8 @@ export interface PharmacyFormData {
   inventory: Array<{
     name: string;
     supplier: string;
-    quantity: string;
+    quantity: number;
+    dosage: string;
   }>;
 }
 

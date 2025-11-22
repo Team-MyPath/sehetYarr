@@ -4,7 +4,8 @@ import { Schema, model, models, Document } from 'mongoose';
 export interface IInventoryItem {
   name: string;
   supplier: string;
-  quantity: string;
+  quantity: number;
+  dosage: string; // e.g., "200mg", "50mg"
 }
 
 // Interface for Location
@@ -38,8 +39,13 @@ const InventoryItemSchema = new Schema<IInventoryItem>({
     trim: true
   },
   quantity: {
-    type: String,
+    type: Number,
     required: [true, 'Quantity is required'],
+    min: [0, 'Quantity must be a positive number']
+  },
+  dosage: {
+    type: String,
+    required: [true, 'Dosage is required'],
     trim: true
   }
 }, {
@@ -145,7 +151,7 @@ PharmacySchema.statics.findByMedicine = function(medicineName: string) {
 PharmacySchema.pre('save', function(next) {
   // Ensure inventory items have valid data
   this.inventory = this.inventory.filter((item: IInventoryItem) => 
-    item.name && item.supplier && item.quantity
+    item.name && item.supplier && item.quantity !== undefined && item.dosage
   );
   next();
 });

@@ -6,7 +6,6 @@ export type PatientDocType = {
   gender: 'male' | 'female' | 'other';
   dateOfBirth: string;
   cnic: string;
-  cnicIV: string;
   bloodGroup?: 'A+' | 'A-' | 'B+' | 'B-' | 'O+' | 'O-' | 'AB+' | 'AB-';
   clerkId?: string;
   userId?: string;
@@ -56,10 +55,6 @@ export const patientSchema: RxJsonSchema<PatientDocType> = {
     cnic: {
       type: 'string',
       maxLength: 15
-    },
-    cnicIV: {
-      type: 'string',
-      maxLength: 100
     },
     bloodGroup: {
       type: 'string',
@@ -114,6 +109,6 @@ export const patientSchema: RxJsonSchema<PatientDocType> = {
       enum: ['synced', 'pending', 'failed']
     }
   },
-  required: ['_id', 'name', 'gender', 'dateOfBirth', 'cnic', 'cnicIV', 'createdAt', 'updatedAt', 'syncStatus'],
+  required: ['_id', 'name', 'gender', 'dateOfBirth', 'cnic', 'createdAt', 'updatedAt', 'syncStatus'],
   indexes: ['cnic', 'name', 'updatedAt']
 };

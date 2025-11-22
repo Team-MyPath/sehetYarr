@@ -16,6 +16,7 @@ export interface Appointment {
   status: 'Scheduled' | 'Completed' | 'Cancelled' | 'No Show';
   priority?: 'Normal' | 'Urgent';
   reason?: string;
+  notes?: string;
   createdAt: string;
   updatedAt: string;
 }

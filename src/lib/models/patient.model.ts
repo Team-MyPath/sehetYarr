@@ -36,7 +36,6 @@ const PatientSchema = new Schema(
     gender: { type: String, required: true, enum: Object.values(Gender) },
     dateOfBirth: { type: Date, required: true },
     cnic: { type: String, required: true },
-    cnicIV: { type: String, required: true },
     bloodGroup: { type: String, enum: Object.values(BloodGroup) },
     clerkId: { type: String, unique: true, sparse: true }, // Link to Clerk User
     userId: { type: Schema.Types.ObjectId, ref: 'User' }, // Link to internal User

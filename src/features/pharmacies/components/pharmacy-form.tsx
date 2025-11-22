@@ -24,7 +24,8 @@ const formSchema = z.object({
   'location.state': z.string().min(1, { message: 'State is required.' }),
   'inventory.name': z.string().optional(),
   'inventory.supplier': z.string().optional(),
-  'inventory.quantity': z.string().optional()
+  'inventory.quantity': z.coerce.number().min(0, { message: 'Quantity must be a positive number.' }).optional(),
+  'inventory.dosage': z.string().optional()
 });
 
 export default function PharmacyForm({
@@ -43,7 +44,8 @@ export default function PharmacyForm({
     'location.state': initialData?.location?.state || '',
     'inventory.name': initialData?.inventory?.[0]?.name || '',
     'inventory.supplier': initialData?.inventory?.[0]?.supplier || '',
-    'inventory.quantity': initialData?.inventory?.[0]?.quantity || ''
+    'inventory.quantity': initialData?.inventory?.[0]?.quantity ?? undefined,
+    'inventory.dosage': initialData?.inventory?.[0]?.dosage || ''
   };
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -66,7 +68,8 @@ export default function PharmacyForm({
         inventory: [{
           name: values['inventory.name'] || '',
           supplier: values['inventory.supplier'] || '',
-          quantity: values['inventory.quantity'] || ''
+          quantity: values['inventory.quantity'] ?? 0,
+          dosage: values['inventory.dosage'] || ''
         }]
       };
 
@@ -147,7 +150,7 @@ export default function PharmacyForm({
           {/* Inventory */}
           <div className='space-y-4'>
             <h3 className='text-lg font-semibold'>{t('common.sample_inventory')}</h3>
-            <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
+            <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4'>
               <FormInput 
                 control={form.control} 
                 name='inventory.name' 
@@ -164,7 +167,15 @@ export default function PharmacyForm({
                 control={form.control} 
                 name='inventory.quantity' 
                 label={t('common.quantity')} 
-                placeholder='e.g., 100 tablets'
+                type='number'
+                placeholder='e.g., 100'
+                min='0'
+              />
+              <FormInput 
+                control={form.control} 
+                name='inventory.dosage' 
+                label={t('common.dosage') || 'Dosage'} 
+                placeholder='e.g., 200mg, 50mg'
               />
             </div>
           </div>

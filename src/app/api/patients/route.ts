@@ -113,14 +113,16 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
-    // Validate required fields
-    const { name, gender, dateOfBirth, cnic, cnicIV } = body;
+    logger.info('Received patient creation request:', JSON.stringify(body, null, 2));
 
-    if (!name || !gender || !dateOfBirth || !cnic || !cnicIV) {
+    // Validate required fields
+    const { name, gender, dateOfBirth, cnic } = body;
+
+    if (!name || !gender || !dateOfBirth || !cnic) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Missing required fields: name, gender, dateOfBirth, cnic, cnicIV'
+          error: 'Missing required fields: name, gender, dateOfBirth, cnic'
         },
         { status: 400 }
       );
@@ -157,12 +159,47 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check for existing patient with same CNIC or Phone
+    // Build cleaned body first - the form already cleans the data, so we just need to ensure required fields
+    const cleanedBody: any = {
+      name: body.name?.trim(),
+      cnic: body.cnic?.trim(),
+      gender: body.gender,
+      dateOfBirth: dob, // Use the validated date
+    };
+
+    // Only include bloodGroup if provided
+    if (body.bloodGroup) {
+      cleanedBody.bloodGroup = body.bloodGroup;
+    }
+
+    // Include contact object if it exists (form already cleaned it)
+    if (body.contact && typeof body.contact === 'object') {
+      logger.info('Including contact object from request:', JSON.stringify(body.contact, null, 2));
+      cleanedBody.contact = body.contact;
+    } else {
+      logger.info('No contact object in request body');
+    }
+
+    // Include emergencyContact object if it exists (form already cleaned it)
+    if (body.emergencyContact && typeof body.emergencyContact === 'object') {
+      logger.info('Including emergencyContact object from request:', JSON.stringify(body.emergencyContact, null, 2));
+      cleanedBody.emergencyContact = body.emergencyContact;
+    } else {
+      logger.info('No emergencyContact object in request body');
+    }
+
+    // Check for existing patient with same CNIC or Phone (only if phone is provided)
+    const searchConditions: any[] = [
+      { cnic: cnic }
+    ];
+    
+    // Only check phone if it's provided and not empty
+    if (body.contact?.primaryNumber && body.contact.primaryNumber.trim()) {
+      searchConditions.push({ 'contact.primaryNumber': body.contact.primaryNumber.trim() });
+    }
+    
     const existingPatient = await PatientModel.findOne({
-      $or: [
-        { cnic: cnic },
-        { 'contact.primaryNumber': body.contact?.primaryNumber }
-      ]
+      $or: searchConditions
     });
 
     // Determine if the creator is a hospital
@@ -189,8 +226,44 @@ export async function POST(req: NextRequest) {
     }
 
     if (existingPatient) {
-      // If hospital, link the patient instead of error
+      // If hospital, update the patient with new information and link if needed
       if (hospitalId) {
+        // Update existing patient with new contact/emergency contact info if provided
+        const updateData: any = {};
+        
+        // Update contact info if provided
+        if (cleanedBody.contact && Object.keys(cleanedBody.contact).length > 0) {
+          updateData.contact = {
+            ...existingPatient.contact?.toObject(),
+            ...cleanedBody.contact
+          };
+        }
+        
+        // Update emergency contact info if provided
+        if (cleanedBody.emergencyContact && Object.keys(cleanedBody.emergencyContact).length > 0) {
+          updateData.emergencyContact = {
+            ...existingPatient.emergencyContact?.toObject(),
+            ...cleanedBody.emergencyContact
+          };
+        }
+        
+        // Update blood group if provided and different
+        if (cleanedBody.bloodGroup && cleanedBody.bloodGroup !== existingPatient.bloodGroup) {
+          updateData.bloodGroup = cleanedBody.bloodGroup;
+        }
+        
+        // Update the patient if there's new data
+        let updatedPatient = existingPatient;
+        if (Object.keys(updateData).length > 0) {
+          updatedPatient = await PatientModel.findByIdAndUpdate(
+            existingPatient._id,
+            { $set: updateData },
+            { new: true, runValidators: true }
+          );
+          logger.info('Updated existing patient with new information:', existingPatient._id);
+        }
+        
+        // Check and create link if needed
         const existingLink = await PatientHospitalModel.findOne({
           patientId: existingPatient._id,
           hospitalId: hospitalId
@@ -204,17 +277,21 @@ export async function POST(req: NextRequest) {
           return NextResponse.json(
             { 
               success: true, 
-              message: 'Patient already exists and has been linked to your hospital',
-              data: existingPatient 
+              message: Object.keys(updateData).length > 0 
+                ? 'Patient already exists. Updated with new information and linked to your hospital'
+                : 'Patient already exists and has been linked to your hospital',
+              data: updatedPatient 
             },
             { status: 200 }
           );
         } else {
-           return NextResponse.json(
+          return NextResponse.json(
             { 
               success: true, 
-              message: 'Patient is already linked to your hospital',
-              data: existingPatient 
+              message: Object.keys(updateData).length > 0
+                ? 'Patient already exists. Updated with new information'
+                : 'Patient is already linked to your hospital',
+              data: updatedPatient 
             },
             { status: 200 }
           );
@@ -237,7 +314,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const patient = await PatientModel.create(body);
+    // Final validation - ensure all required fields are present
+    if (!cleanedBody.name || !cleanedBody.cnic || !cleanedBody.gender || !cleanedBody.dateOfBirth) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Missing required fields after cleanup. Please check: name, cnic, gender, dateOfBirth'
+        },
+        { status: 400 }
+      );
+    }
+
+    logger.info('Creating patient with cleaned body:', JSON.stringify(cleanedBody, null, 2));
+
+    const patient = await PatientModel.create(cleanedBody);
 
     // If created by hospital, create link
     if (hospitalId) {
@@ -255,8 +345,26 @@ export async function POST(req: NextRequest) {
     );
   } catch (error: any) {
     logger.error('Error creating patient:', error);
+    
+    // Handle validation errors specifically
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors || {}).map((err: any) => err.message);
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: validationErrors.join(', ') || 'Validation failed',
+          details: error.errors 
+        },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to create patient' },
+      { 
+        success: false, 
+        error: error.message || 'Failed to create patient',
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
       { status: 500 }
     );
   }

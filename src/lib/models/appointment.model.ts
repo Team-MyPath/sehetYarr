@@ -17,7 +17,8 @@ const AppointmentSchema = new Schema(
       enum: Object.values(AppointmentStatus)
     },
     reason: String,
-    priority: { type: String, enum: Object.values(Priority) }
+    priority: { type: String, enum: Object.values(Priority) },
+    notes: String
   },
   { timestamps: true }
 );

@@ -12,7 +12,8 @@ export type PharmacyDocType = {
   inventory: Array<{
     name: string;
     supplier: string;
-    quantity: string;
+    quantity: number;
+    dosage: string;
   }>;
   createdAt: string;
   updatedAt: string;
@@ -51,7 +52,8 @@ export const pharmacySchema: RxJsonSchema<PharmacyDocType> = {
         properties: {
           name: { type: 'string' },
           supplier: { type: 'string' },
-          quantity: { type: 'string' }
+          quantity: { type: 'number' },
+          dosage: { type: 'string' }
         }
       }
     },

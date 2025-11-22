@@ -28,6 +28,7 @@ const formSchema = z.object({
   status: z.enum(['Scheduled', 'Completed', 'Cancelled', 'No Show']),
   priority: z.enum(['Normal', 'Urgent']).optional(),
   reason: z.string().optional(),
+  notes: z.string().optional(),
   payUpfront: z.boolean().default(false),
   totalAmount: z.number().optional(),
   paidAmount: z.number().optional(),
@@ -122,6 +123,7 @@ export default function AppointmentForm({
     status: initialData?.status || ('Scheduled' as const),
     priority: initialData?.priority,
     reason: initialData?.reason || '',
+    notes: initialData?.notes || '',
     payUpfront: false,
     totalAmount: undefined,
     paidAmount: undefined,
@@ -159,7 +161,8 @@ export default function AppointmentForm({
         appointmentDate: dateTime.toISOString(),
         status: values.status,
         priority: values.priority,
-        reason: values.reason
+        reason: values.reason,
+        notes: values.notes
       };
 
       const url = initialData
@@ -341,6 +344,18 @@ export default function AppointmentForm({
               placeholder={t('common.enter_reason')}
               config={{
                 maxLength: 500,
+                showCharCount: true,
+                rows: 4
+              }}
+            />
+
+            <FormTextarea
+              control={form.control}
+              name='notes'
+              label={t('common.notes') || 'Notes'}
+              placeholder={t('common.enter_notes') || 'Enter any additional notes...'}
+              config={{
+                maxLength: 1000,
                 showCharCount: true,
                 rows: 4
               }}
