@@ -168,10 +168,15 @@ const ChatContent = () => {
         const lastIndex = prev.length - 1;
         const lastMessage = prev[lastIndex];
 
-        // If the last message is from assistant, append to it
+        // Check if the last message is a finalized assistant message (has '-finalized-' in key)
+        // If so, we should start a new message instead of appending
+        const isFinalized = lastMessage?.key?.includes('-finalized-');
+        
+        // If the last message is from assistant and NOT finalized, append to it
         if (
           lastMessage?.from === "assistant" &&
-          lastMessage.type !== "thinking"
+          lastMessage.type !== "thinking" &&
+          !isFinalized
         ) {
           const currentContent = lastMessage.versions[0]?.content || "";
           const updatedMessage = {
@@ -186,7 +191,7 @@ const ChatContent = () => {
           return [...prev.slice(0, lastIndex), updatedMessage];
         }
 
-        // If no assistant message yet, create a new one
+        // If no assistant message yet, or last message is finalized, create a new one
         const newAssistantMessage: MessageType = {
           key: `assistant-${Date.now()}`,
           from: "assistant",
@@ -212,9 +217,9 @@ const ChatContent = () => {
       }
     };
 
-    // Handle generation complete - stop rendering chunks
+    // Handle generation complete - finalize current message and prepare for new one
     const handleGenerationComplete = () => {
-      console.log("Generation complete - stopping chunk rendering");
+      console.log("Generation complete - finalizing current message");
       
       // Mark streaming as complete
       isStreamingActive = false;
@@ -232,14 +237,19 @@ const ChatContent = () => {
       // Set status to ready
       setStatus("ready");
       
-      // Optionally finalize the last message (ensure it's marked as complete)
+      // Finalize the current assistant message - this ensures the next generation starts a new bubble
       setMessages((prev) => {
         const lastIndex = prev.length - 1;
         const lastMessage = prev[lastIndex];
 
         if (lastMessage?.from === "assistant") {
-          // Message is finalized, no more chunks will be added
-          return prev;
+          // Mark this message as complete by creating a finalized copy
+          // This ensures any future chunks will create a new assistant message
+          const finalizedMessage = {
+            ...lastMessage,
+            key: `${lastMessage.key}-finalized-${Date.now()}`, // New key to mark as finalized
+          };
+          return [...prev.slice(0, lastIndex), finalizedMessage];
         }
 
         return prev;
