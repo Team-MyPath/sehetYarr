@@ -16,6 +16,7 @@ export const en = {
     profile: 'Profile',
     login: 'Login',
     logout: 'Logout',
+    offline: 'Offline',
     search: 'Search...',
     overview: 'Overview',
     language: 'Language',

@@ -10,12 +10,19 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { UserAvatarProfile } from '@/components/user-avatar-profile';
-import { SignOutButton } from '@clerk/nextjs';
+import { useClerk } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useOfflineAuth } from '@/hooks/use-offline-auth';
+import { useI18n } from '@/providers/i18n-provider';
 export function UserNav() {
+  const { t } = useI18n();
   const { user, isOffline, isCached } = useOfflineAuth();
   const router = useRouter();
+  const { signOut } = useClerk();
+
+  const handleSignOut = async () => {
+    await signOut({ redirectUrl: '/auth/sign-in' });
+  };
   if (user) {
     return (
       <DropdownMenu>
@@ -38,7 +45,7 @@ export function UserNav() {
                 </p>
                 {isCached && (
                   <span className='text-xs px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300'>
-                    Offline
+                    {t('common.offline')}
                   </span>
                 )}
               </div>
@@ -50,12 +57,12 @@ export function UserNav() {
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem onClick={() => router.push('/dashboard/profile')}>
-              Profile
+              {t('common.profile')}
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            <SignOutButton redirectUrl='/auth/sign-in' />
+          <DropdownMenuItem onClick={handleSignOut}>
+            {t('common.logout')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

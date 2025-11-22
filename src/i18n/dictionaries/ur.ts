@@ -16,6 +16,7 @@ export const ur = {
     profile: 'پروفائل',
     login: 'لاگ ان',
     logout: 'لاگ آؤٹ',
+    offline: 'آف لائن',
     search: 'تلاش کریں...',
     overview: 'جائزہ',
     language: 'زبان',

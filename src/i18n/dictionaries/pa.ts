@@ -16,6 +16,7 @@ export const pa = {
     profile: 'پروفائل',
     login: 'لاگ ان',
     logout: 'لاگ آؤٹ',
+    offline: 'آف لائن',
     search: 'تلاش...',
     overview: 'جائزہ',
     language: 'زبان',
