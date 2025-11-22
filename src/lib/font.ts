@@ -4,7 +4,8 @@ import {
   Instrument_Sans,
   Inter,
   Mulish,
-  Noto_Sans_Mono
+  Noto_Sans_Mono,
+  Noto_Nastaliq_Urdu,
 } from 'next/font/google';
 
 import { cn } from '@/lib/utils';
@@ -39,11 +40,19 @@ const fontInter = Inter({
   variable: '--font-inter'
 });
 
+const fontNotoNastaliq = Noto_Nastaliq_Urdu({
+  weight: ['400', '700'],
+  subsets: ['arabic'],
+  variable: '--font-nastaleeq',
+  display: 'swap',
+});
+
 export const fontVariables = cn(
   fontSans.variable,
   fontMono.variable,
   fontInstrument.variable,
   fontNotoMono.variable,
   fontMullish.variable,
-  fontInter.variable
+  fontInter.variable,
+  fontNotoNastaliq.variable
 );
