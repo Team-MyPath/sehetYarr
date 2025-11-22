@@ -99,7 +99,7 @@ export const PatientSummaryModal: React.FC<PatientSummaryModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="min-w-5xl border border-red-500 max-h-[90vh] flex flex-col p-0 gap-0">
+      <DialogContent className="min-w-5xl max-h-[90vh] flex flex-col p-0 gap-0">
         <DialogHeader className="px-6 py-4 border-b shrink-0">
           <DialogTitle className="text-2xl font-bold flex items-center gap-2">
             <FileText className="h-6 w-6" />
