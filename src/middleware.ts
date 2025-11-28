@@ -60,15 +60,34 @@ export default clerkMiddleware(async (auth, req) => {
   let response = NextResponse.next();
 
   if (isProtectedRoute(req)) {
-    try {
-      await auth.protect();
-      
-      const { sessionClaims } = await auth();
-      
+    const authObj = await auth();
+
+    if (!authObj.userId) {
+      // If Clerk auth fails (e.g., offline or network error), check for existing auth cookie
+      // This allows cached pages to load offline without redirecting to sign-in
+      const hasAuthCookie =
+        req.cookies.get('__session') || req.cookies.get('serviceToken');
+
+      if (!hasAuthCookie) {
+        // No cached session, user needs to authenticate
+        console.log(
+          '[Middleware] No cached session found, redirecting to sign-in'
+        );
+        return NextResponse.redirect(new URL('/auth/sign-in', req.url));
+      }
+
+      // Has cached session, allow access (service worker will handle serving cached pages)
+      console.log(
+        '[Middleware] Cached session found, allowing access for offline use'
+      );
+    } else {
+      const { sessionClaims } = authObj;
+
       // Get role from session claims (support various locations)
-      const role = (sessionClaims?.public_metadata as any)?.role || 
-                   (sessionClaims?.metadata as any)?.role || 
-                   (sessionClaims as any)?.role;
+      const role =
+        (sessionClaims?.public_metadata as any)?.role ||
+        (sessionClaims?.metadata as any)?.role ||
+        (sessionClaims as any)?.role;
 
       // If user is explicitly a guest, redirect to onboarding
       // If role is missing, we let them pass to dashboard layout which will check DB
@@ -77,7 +96,7 @@ export default clerkMiddleware(async (auth, req) => {
       }
 
       const path = req.nextUrl.pathname;
-      
+
       // If we have a role, enforce RBAC
       if (role && role !== 'admin') {
         // Check access for other roles
@@ -87,9 +106,9 @@ export default clerkMiddleware(async (auth, req) => {
           // If role exists but has no routes defined, maybe invalid role?
           return NextResponse.redirect(new URL('/onboarding', req.url));
         }
-        
+
         // Check if current path starts with any allowed route
-        const hasAccess = allowedRoutes.some(route => {
+        const hasAccess = allowedRoutes.some((route) => {
           if (route.includes('(.*)')) {
             const base = route.replace('(.*)', '');
             return path.startsWith(base);
@@ -103,29 +122,15 @@ export default clerkMiddleware(async (auth, req) => {
           if (allowedRoutes.includes('/dashboard/overview')) {
             // Avoid redirect loop if already on overview
             if (path !== '/dashboard/overview') {
-              response = NextResponse.redirect(new URL('/dashboard/overview', req.url));
+              response = NextResponse.redirect(
+                new URL('/dashboard/overview', req.url)
+              );
             }
           } else {
             response = NextResponse.redirect(new URL('/', req.url));
           }
         }
       }
-    } catch (authError) {
-      // If Clerk auth fails (e.g., offline or network error), check for existing auth cookie
-      // This allows cached pages to load offline without redirecting to sign-in
-      console.log('[Middleware] Auth check failed, checking for cached session:', authError);
-      
-      const hasAuthCookie = req.cookies.get('__session') || req.cookies.get('serviceToken');
-      
-      if (!hasAuthCookie) {
-        // No cached session, user needs to authenticate
-        console.log('[Middleware] No cached session found, redirecting to sign-in');
-        return NextResponse.redirect(new URL('/auth/sign-in', req.url));
-      }
-      
-      // Has cached session, allow access (service worker will handle serving cached pages)
-      console.log('[Middleware] Cached session found, allowing access for offline use');
-      // Continue with default response
     }
   }
 

@@ -32,6 +32,13 @@ export default async function DashboardLayout({
       }
     }
   } catch (error) {
+    // Rethrow Next.js redirects so they are handled correctly
+    if (
+      (error as any)?.digest?.startsWith('NEXT_REDIRECT') ||
+      (error as any)?.message === 'NEXT_REDIRECT'
+    ) {
+      throw error;
+    }
     // If this fails (offline mode), allow access anyway
     // Client-side useOfflineAuth will handle showing cached user data
     console.log('[DashboardLayout] Server-side user check failed (possibly offline), continuing with cached session:', error);
