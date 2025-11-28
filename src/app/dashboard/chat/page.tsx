@@ -57,6 +57,7 @@ import { toast } from "sonner";
 import { llmChatService } from "@/services/llmChat";
 import { useUser } from "@clerk/nextjs";
 import { ProgressNotification } from "@/components/chat/progress-notification";
+import { useI18n } from "@/providers/i18n-provider";
 
 import { FileIcon, ImageIcon } from "lucide-react";
 import Image from "next/image";
@@ -93,6 +94,7 @@ const initialMessages: MessageType[] = [];
 
 const ChatContent = () => {
   const { user } = useUser();
+  const { t } = useI18n();
   const [useMicrophone, setUseMicrophone] = useState<boolean>(false);
   const [status, setStatus] = useState<
     "submitted" | "streaming" | "ready" | "error"
@@ -618,6 +620,7 @@ const ChatContent = () => {
               <PromptInputTextarea
                 onChange={(event) => setText(event.target.value)}
                 value={text}
+                placeholder={t('common.chat_placeholder')}
               />
             </PromptInputBody>
             <PromptInputFooter className='py-1'>

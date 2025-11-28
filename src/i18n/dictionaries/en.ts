@@ -18,6 +18,7 @@ export const en = {
     logout: 'Logout',
     offline: 'Offline',
     search: 'Search...',
+    chat_placeholder: 'What would you like to know?',
     overview: 'Overview',
     language: 'Language',
     theme: 'Theme',

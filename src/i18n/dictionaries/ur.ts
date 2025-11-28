@@ -18,6 +18,7 @@ export const ur = {
     logout: 'لاگ آؤٹ',
     offline: 'آف لائن',
     search: 'تلاش کریں...',
+    chat_placeholder: 'آپ کیا جاننا چاہتے ہیں؟',
     overview: 'جائزہ',
     language: 'زبان',
     theme: 'تھیم',

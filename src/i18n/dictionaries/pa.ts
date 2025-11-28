@@ -18,6 +18,7 @@ export const pa = {
     logout: 'لاگ آؤٹ',
     offline: 'آف لائن',
     search: 'تلاش...',
+    chat_placeholder: 'تسی کی جاننا چاہندے او؟',
     overview: 'جائزہ',
     language: 'زبان',
     theme: 'تھیم',

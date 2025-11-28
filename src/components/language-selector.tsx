@@ -28,8 +28,14 @@ export function LanguageSelector() {
         <DropdownMenuItem onClick={() => setLanguage('ur')} className="font-nastaleeq">
           اردو {language === 'ur' && '✓'}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setLanguage('pa')} className="font-nastaleeq">
+        <DropdownMenuItem onClick={() => setLanguage('pa')} className='font-nastaleeq'>
           پنجابی {language === 'pa' && '✓'}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setLanguage('sd')} className='font-nastaleeq'>
+          سنڌي {language === 'sd' && '✓'}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setLanguage('ps')} className='font-nastaleeq'>
+          پښتو {language === 'ps' && '✓'}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
